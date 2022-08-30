@@ -1,0 +1,15 @@
+{
+    "players_number": 2,
+    "players_names": [
+        "krutoi_official",
+        "timonov_art"
+    ],
+    "players_folders": [
+        "/Users/igorlashkov/Downloads/Radiohead",
+        "/Users/igorlashkov/Downloads/\u0417\u0435\u043c\u0444\u0438\u0440\u0430"
+    ],
+    "sample_duration": 1.0,
+    "repeats_number": 5,
+    "clues_number": 5,
+    "rounds_number": 10
+}
