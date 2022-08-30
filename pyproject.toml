@@ -1,0 +1,26 @@
+[build-system]
+requires = ["setuptools==65", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "song_guess_name"
+authors = [
+    {name = "Igor Lashkov", email = "hz@vasche.com"},
+]
+version = "0.1.0"
+readme = "README.md"
+requires-python = ">=3.8.13"
+license = {text = "Proprietary"}
+classifiers = [
+    "Programming Language :: Python :: 3",
+]
+dependencies = [
+    "pydantic==1.9.2",
+    "python-magic-bin==0.4.14",
+    "libmagic==1.0",
+    "music-tag==0.4.3",
+    "python-vlc==3.0.16120",
+]
+
+[project.scripts]
+song-guess-game = "guesser.main:main"

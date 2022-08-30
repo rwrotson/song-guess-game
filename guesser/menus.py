@@ -164,7 +164,6 @@ def create_answer_menu(game):
 
 
 def create_evaluation_menu(game, answer=''):
-    print(game, answer, sep='\n')
     if answer.strip() == '': answer = 'no answer'
     song = game.users[game.current_user_id].songs[game.round]
     song_repr = f'\033[1m{song.artist} - {song.title}\n({song.album}, {song.year})\033[0m'
