@@ -3,7 +3,9 @@
 In order to play audiofiles inside the game you need `ffmpeg`.
 
 On MacOS, via Homebrew:
-```brew install ffmpeg```
+```
+brew install ffmpeg
+```
 
 On Linux:
 ```
@@ -12,10 +14,16 @@ sudo apt install ffmpeg
 ```
 
 On Windows, via Chocolatey:
-```choco install ffmpeg```
+```
+choco install ffmpeg
+```
 
 Then create a build of the game by:
-```pip install .```
+```
+pip install .
+```
 
 Then run the game by executing:
-```song-guess-game```
+```
+song-guess-game
+```
