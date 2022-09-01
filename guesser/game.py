@@ -5,9 +5,16 @@ from guesser.utils import choose_random_songs, get_indexes_of_maximums_in_list
 
 
 def initialize_game():
+    """
+    Create Game object with all data about the current game
+    """
     settings = get_settings_from_settings_file()
+    # parse game params from settings
     players_number = settings.players_number
     rounds = settings.rounds_number
+    infinite_repeats = True if settings.repeats_number == 0 else False
+    list_of_score = [0,] * players_number
+    list_of_clues = [settings.clues_number] * players_number
     list_of_users = []
     for i in range(players_number):
         path = settings.players_folders[i]
@@ -22,9 +29,7 @@ def initialize_game():
             songs=list_of_songs
             )
         list_of_users.append(user)
-    list_of_score = [0,] * players_number
-    list_of_clues = [settings.clues_number] * players_number
-    infinite_repeats = True if settings.repeats_number == 0 else False
+    # create game object from extracted params
     game = Game(
         users=list_of_users, rounds=rounds, 
         sample_duration=settings.sample_duration,
@@ -37,8 +42,10 @@ def initialize_game():
 def show_current_state_of_game(game):
     current_user_id = game.current_user_id
     print(f'\n\033[1mROUND {game.current_round}\033[0m')
+
     for user in game.users:
         print(f'\033[1m{user.name}: {game.score[user.id]}\033[0m')
+
     username = game.users[current_user_id].name.upper()
     repeats = game.repeats
     clues = game.clues[current_user_id]
@@ -54,15 +61,18 @@ def show_game_results(game):
     for winner_id in winner_ids:
         winner = game.users[winner_id].name
         input(f'THE WINNER IS... {winner.upper()}')
+
     for user_id in range(0, len(game.users)):
         user = game.users[user_id]
         print(f"\n{user.name.upper()}'S RESULTS:")
         print(' ' * 20 + f'{game.score[user_id]} / {float(game.rounds)}')
+
         song_counter = 0
         for song in user.songs:
             print(game.results[user_id][song_counter], end=': ')
             print(f'{song.artist} -- {song.title}')
             song_counter += 1
+
     print('\033[0m')
 
     print('Press ENTER to return to main menu.')
