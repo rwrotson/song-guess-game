@@ -1,16 +1,25 @@
-from time import sleep
 import random
 import os
-from pathlib import Path
-import vlc
+
 import magic
-import music_tag
+
+
+def get_indexes_of_maximums_in_list(list_object):
+    maximum = 0
+    max_index_list = [0,]
+    for element_number in range(0, len(list_object)):
+        if list_object[element_number] > maximum:
+            maximum = list_object[element_number]
+            max_index_list = [element_number]
+        elif list_object[element_number] == maximum:
+            max_index_list.append(element_number)
+    return max_index_list
 
 
 def get_all_audiofiles(path):
-    if path is None:
-        return None
     ALLOWED_FORMATS = ['audio/x-flac', 'audio/mpeg', 'audio/x-wav']
+
+    if path is None: return None
     all_files = []
     for path, _, files in os.walk(path):
         for file in files:
@@ -20,18 +29,24 @@ def get_all_audiofiles(path):
 
 
 def find_maximum_number_of_audiofiles(paths):
-    max = 0
+    max_n = 0
     for path in paths:
         songs_number = len(get_all_audiofiles(path))
         if songs_number is None: 
             return None
-        if songs_number > max: max = songs_number
-    return max
+        if songs_number > max_n: max_n = songs_number
+    return max_n
+
+
+def choose_random_songs(path, number):
+    audio_files = get_all_audiofiles(path)
+    chosen = random.sample(audio_files, number)
+    return chosen
 
 
 def get_random_times_for_sampling(length):
     timestamps = []
-    for _ in range(0, 2):
+    for _ in range(0, 10):
         while True:
             sample_start_time = random.randrange(1, length)
             for timestamp in timestamps:
@@ -41,50 +56,3 @@ def get_random_times_for_sampling(length):
             timestamps.append(sample_start_time)
             break
     return timestamps
-
-
-def choose_random_songs(path, number):
-    audio_files = get_all_audiofiles(path)
-    chosen = random.sample(audio_files, number)
-    return chosen
-
-
-def process_song(path):
-    metadata = get_metadata_from_song_path(path)
-    length = int(metadata['length'])
-    samples = get_random_times_for_sampling(length)
-    metadata['samples'] = samples
-    return metadata
-
-
-def get_metadata_from_song_path(path):
-    filename = Path(path).name
-    metadata = {'path': path, 'filename': filename}
-
-    data = music_tag.load_file(path)
-    FIELDS = ('title', 'artist', 'album', 'year')
-    for field in FIELDS:
-        try:
-            metadata[field] = data[field].values[0]
-        except IndexError:
-            metadata[field] = None
-
-    metadata['length'] = (int(data['#length'].values[0]) - 5) * 1000
-
-    return metadata
-
-
-def play_song_sample(path, start, length, pre=0, ext=0):
-    song = vlc.MediaPlayer(path)
-    song.play()
-    actual_start = start - pre if start - pre > 0 else 0
-    song.set_time(actual_start)
-    sleep(length + ext)
-    song.stop()
-
-
-def play_song(path):
-    song = vlc.MediaPlayer(path)
-    song.play()
-    input('Press ENTER to turn off the song.')
-    song.stop()

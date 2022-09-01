@@ -1,5 +1,6 @@
 import os
-from typing import List
+from typing import List, Dict
+from pydub import AudioSegment
 from pydantic import BaseModel, validator
 
 from guesser.utils import (
@@ -66,6 +67,8 @@ class Settings(BaseModel):
 
 class Song(BaseModel):
 
+    song_object: AudioSegment
+
     title: str
     artist: str
     album: str
@@ -74,7 +77,11 @@ class Song(BaseModel):
     path: str
     filename: str
     length: int
-    samples: List[int]
+    sample_time: int
+    samples: List[AudioSegment]
+
+    class Config:
+        arbitrary_types_allowed = True
 
 
 class User(BaseModel):
@@ -87,13 +94,16 @@ class User(BaseModel):
 
 class Game(BaseModel):
 
-    users: List[User]
     current_user_id: int = 0
-    round: int = 1
+    current_round: int = 1
+
+    users: List[User]
     rounds: int
     sample_duration: float
     score: List[float]
     repeats: int = 0
+    clues: List[int]
+
     max_repeats: int
     infinite_repeats: bool = False
-    clues: List[int]
+    results: Dict[int, List[float]] = dict()

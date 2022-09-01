@@ -1,18 +1,15 @@
 from pydantic import ValidationError
-from time import sleep
 import typing
 import os
 
 from guesser.consts import JSON_SETTINGS_PATH
-from guesser.models import Settings, User, Song, Game
-from guesser.utils import (
-    choose_random_songs, process_song
-)
+from guesser.models import Settings
 
 
 def show_configuration():
     if os.path.isfile(JSON_SETTINGS_PATH):
         settings = get_settings_from_settings_file()
+        print('\033[1m')
         if settings is not None:
             for item in settings:
                 print(f'{item[0].upper()}: ', end='')
@@ -21,6 +18,7 @@ def show_configuration():
                     print(*item[1], sep=',\n  ')
                 else:
                     print(item[1])
+        print('\033[0m')
         input('\nPress ENTER to go back.')
         
     else:
@@ -29,49 +27,14 @@ def show_configuration():
 
 def get_settings_from_settings_file():
     if os.path.isfile(JSON_SETTINGS_PATH):
-        print('Wait a few seconds... Validating settings...\n')
+        print('Wait a few seconds...\nValidating settings...\n')
         try:
             settings = Settings.parse_file(JSON_SETTINGS_PATH)
             return settings
-        except ValidationError as exc:
+        
+        except ValidationError:
             print('Sorry, your settings are incorrect, reconfigure the game.')
-
-
-def save_settings(settings):
-    json_object = settings.json(indent=4)
-    with open(JSON_SETTINGS_PATH, 'w', encoding='utf-8') as json_file:
-        json_file.write(json_object)
-    print('Your configuration SAVED!\n')
-
-
-def initialize_game():
-    settings = get_settings_from_settings_file()
-    players_number = settings.players_number
-    rounds = settings.rounds_number
-    list_of_users = []
-    for i in range(players_number):
-        path = settings.players_folders[i]
-        random_songs_paths = choose_random_songs(path, rounds)
-        list_of_songs = []
-        for song_path in random_songs_paths:
-            pr_song = Song.parse_obj(process_song(song_path))
-            list_of_songs.append(pr_song)
-        user = User(
-            id=i, name=settings.players_names[i],
-            path=settings.players_folders[i],
-            songs=list_of_songs
-            )
-        list_of_users.append(user)
-    list_of_score = [0,] * players_number
-    list_of_clues = [settings.clues_number] * players_number
-    infinite_repeats = True if settings.repeats_number == 0 else False
-    game = Game(
-        users=list_of_users, rounds=rounds, 
-        sample_duration=settings.sample_duration,
-        score=list_of_score, max_repeats=settings.repeats_number + 1,
-        infinite_repeats=infinite_repeats, clues=list_of_clues
-        )
-    return game
+    return None
 
 
 def configure_game():
@@ -79,7 +42,9 @@ def configure_game():
     if settings is not None:
         save_settings(settings)
 
-SETTINGS_PROMPTS = {
+
+def get_users_settings_from_input():
+    SETTINGS_PROMPTS = {
     "players_number": "Enter the number of CONTENDERS: ",
     "players_names": "Enter the NAME of player {player_number}: ",
     "players_folders": "Enter the path to the directory with {player_name}'s music: ",
@@ -87,10 +52,7 @@ SETTINGS_PROMPTS = {
     "repeats_number": 'Enter a number of repeat listens on each round (0 for infinite).\n: ',
     "clues_number": 'Enter a number of additional clue samples during the game.\n: ',
     "rounds_number": 'Enter a number of rounds you want to play.\n: '
-}
-
-
-def get_users_settings_from_input():
+    }
     print()
 
     settings = Settings.construct()
@@ -124,10 +86,18 @@ def get_users_settings_from_input():
                         else:
                             print(f"{error.exc}\n({field_name}={value})", '\n')
                     continue
-        except KeyboardInterrupt as e:
+
+        except KeyboardInterrupt:
             print('\nOK, all changes dismissed.\n')
             settings = None
             break
         print()
 
     return settings
+
+
+def save_settings(settings):
+    json_object = settings.json(indent=4)
+    with open(JSON_SETTINGS_PATH, 'w', encoding='utf-8') as json_file:
+        json_file.write(json_object)
+    print('Your configuration SAVED!\n')

@@ -1,0 +1,8 @@
+Metadata-Version: 2.1
+Name: song-guess-game
+Version: 0.1.0
+Author-email: Igor Lashkov <rwrotson@yandex.ru>
+License: Proprietary
+Classifier: Programming Language :: Python :: 3
+Requires-Python: >=3.8.13
+Description-Content-Type: text/markdown

@@ -3,9 +3,9 @@ requires = ["setuptools==65", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "song_guess_name"
+name = "song_guess_game"
 authors = [
-    {name = "Igor Lashkov", email = "hz@vasche.com"},
+    {name = "Igor Lashkov", email = "rwrotson@yandex.ru"},
 ]
 version = "0.1.0"
 readme = "README.md"
@@ -19,7 +19,8 @@ dependencies = [
     "python-magic-bin==0.4.14",
     "libmagic==1.0",
     "music-tag==0.4.3",
-    "python-vlc==3.0.16120",
+    "pydub==0.25.1",
+    "termcolor==1.1.0"
 ]
 
 [project.scripts]

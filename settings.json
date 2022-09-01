@@ -1,13 +1,15 @@
 {
-    "players_number": 1,
+    "players_number": 2,
     "players_names": [
-        "krutoi_official"
+        "igor",
+        "gleb"
     ],
     "players_folders": [
-        "/Users/igorlashkov/Downloads/Radiohead"
+        "/Users/igorlashkov/Downloads/Radiohead",
+        "/Users/igorlashkov/Soulseek Downloads/complete/Under the Skin - Original Soundtrack (by Mica Levi) (2014) [flac]"
     ],
-    "sample_duration": 0.5,
-    "repeats_number": 5,
+    "sample_duration": 1.0,
+    "repeats_number": 0,
     "clues_number": 5,
-    "rounds_number": 10
+    "rounds_number": 2
 }
