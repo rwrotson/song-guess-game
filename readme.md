@@ -1,6 +1,6 @@
 ## Install
 
-In order to play audiofiles inside the game you need `ffmpeg`.
+In order to play audiofiles inside the game you need `ffmpeg`. Install [it](https://ffmpeg.org/download.html).
 
 On MacOS, via Homebrew:
 ```
