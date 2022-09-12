@@ -19,9 +19,7 @@ dependencies = [
     "python-magic-bin==0.4.14",
     "libmagic==1.0",
     "music-tag==0.4.3",
-    "pydub==0.25.1",
-    "termcolor==1.1.0",
-    "loguru==0.6.0"
+    "pydub==0.25.1"
 ]
 
 [project.scripts]

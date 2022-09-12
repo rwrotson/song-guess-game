@@ -1,7 +1,7 @@
 JSON_SETTINGS_PATH = 'settings.json'
 
 READMES = {
-    'rules': '''Each round one or more players guess one song
+    'rules': '''Each round one or more players guesses one song
     from their musical libraries by its short sample,
     one player guess after another.
 
