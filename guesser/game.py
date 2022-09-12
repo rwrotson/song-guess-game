@@ -16,6 +16,7 @@ def initialize_game():
     list_of_score = [0,] * players_number
     list_of_clues = [settings.clues_number] * players_number
     list_of_users = []
+    print('\nChopping songs, wait a minute...')
     for i in range(players_number):
         path = settings.players_folders[i]
         random_songs_paths = choose_random_songs(path, rounds)

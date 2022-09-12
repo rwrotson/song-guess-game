@@ -54,7 +54,7 @@ class Settings(BaseModel):
     @validator('players_folders', each_item=True)
     def check_if_there_are_audiofiles(cls, path):
         songs_number = len(get_all_audiofiles(path))
-        print('songs_number: ', songs_number)
+        print('songs_added: +', songs_number)
         assert songs_number != 0, 'Sorry, there are no supported audiofiles in this folder.'
         return path
     
@@ -103,6 +103,7 @@ class Game(BaseModel):
     score: List[float]
     repeats: int = 0
     clues: List[int]
+    clue_selected: int = 1
 
     max_repeats: int
     infinite_repeats: bool = False

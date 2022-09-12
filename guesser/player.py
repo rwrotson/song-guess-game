@@ -1,6 +1,6 @@
 from multiprocessing import Process
 import magic
-from pydub import AudioSegment
+from pydub import AudioSegment, effects
 from pydub.playback import play
 
 
@@ -19,7 +19,7 @@ def get_samples_from_sample_times(path, list_of_start_times, length):
     song = get_song_object_from_path(path)
     samples_list = []
     for start in list_of_start_times:
-        sample = song[start:start + length * 1000]
+        sample = effects.normalize(song)[start:start + length * 1000]
         samples_list.append(sample)
     return samples_list
 
@@ -30,9 +30,9 @@ def play_sample(sample):
 
 def play_song(song, start=0):
     if start == 0:
-        process = Process(target=play, args=(song,))
+        process = Process(target=play, args=(effects.normalize(song),))
     else:
-        sample = song[start:]
+        sample = effects.normalize(song[start:])
         process = Process(target=play, args=(sample,))
     process.start()
     input('Press ENTER to stop.')

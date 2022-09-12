@@ -1,11 +1,11 @@
-import random
+import sys
 
 from guesser.consts import READMES
 from guesser.settings import show_configuration, configure_game
 from guesser.game import (
     initialize_game, show_current_state_of_game, show_game_results
 )
-from guesser.player import  play_sample, play_song
+from guesser.player import play_sample, play_song
 
 
 def create_menu(options, functions_dict, game=None):
@@ -17,10 +17,10 @@ def create_menu(options, functions_dict, game=None):
             option = int(option)
         except ValueError:
             print(f'Please ENTER a number between 1 and {options_number}.\n')
-            game = create_menu(options, functions_dict, game=None)
+            game = create_menu(options, functions_dict, game=game)
             return game
 
-        if option <= options_number and option > 0:
+        if 0 < option <= options_number:
             func = functions_dict[str(option)].get('func')
             params = functions_dict[str(option)].get('params')
             if isinstance(params, tuple):
@@ -31,34 +31,12 @@ def create_menu(options, functions_dict, game=None):
                 func()
         else:
             print(f'Please ENTER a number between 1 and {options_number}.\n')
-            game = create_menu(options, functions_dict, game=None)
+            game = create_menu(options, functions_dict, game=game)
         return game
 
     except KeyboardInterrupt:
         print('\nOK, goodbye!\n')
-        exit()
-
-
-def create_help_menu():
-    HELP_OPTIONS = '''\nEnter the number of ACTION you want me to do:
-            1. Game RULES.
-            2. Help with SETTINGS.
-            3. BACK.\n: '''
-
-    HELP_FUNCTIONS = {
-        '1': {
-            'func': input,
-            'params': READMES['rules']
-        },
-        '2': {
-            'func': input,
-            'params': READMES['settings']
-        },
-        '3': {
-            'func': print,
-        }
-    }
-    create_menu(HELP_OPTIONS, HELP_FUNCTIONS)
+        sys.exit()
 
 
 def create_main_menu():
@@ -83,7 +61,7 @@ def create_main_menu():
             'func': create_help_menu
         },
         '5': {
-            'func': exit,
+            'func': sys.exit,
         }
     }
     create_menu(MAIN_OPTIONS, MAIN_FUNCTIONS)
@@ -138,9 +116,11 @@ def play_or_repeat_sample(game):
 
 
 def get_a_clue(game):
+    if game.clue_selected == 10: game.clue_selected = 1
     song = game.users[game.current_user_id].songs[game.current_round - 1]
     if game.clues[game.current_user_id] > 0:
-        play_sample(random.choice(song.samples[1:]))
+        play_sample(song.samples[game.clue_selected])
+        game.clue_selected += 1
     else:
         print('You are out of clues! Answer or pass!\n')
     if game.clues[game.current_user_id] != 0:
@@ -150,8 +130,13 @@ def get_a_clue(game):
 
 
 def create_answer_menu(game):
-    answer = input('''\nPrint your suggestion about this song,
-    or say it aloud to your contenders and press ENTER.\n: ''')
+    try:
+        answer = input('''\nPrint your suggestion about this song,
+        or say it aloud to your contenders and press ENTER.\n: ''')
+    except KeyboardInterrupt:
+        print('OK, going back...')
+        game = create_round_menu(game)
+        return game
     game = create_evaluation_menu(game, answer)
     return game
 
@@ -215,3 +200,25 @@ def change_score(game, points):
     else:
         game.results[game.current_user_id].append(points)
     return game
+
+
+def create_help_menu():
+    HELP_OPTIONS = '''\nEnter the number of ACTION you want me to do:
+            1. Game RULES.
+            2. Help with SETTINGS.
+            3. BACK.\n: '''
+
+    HELP_FUNCTIONS = {
+        '1': {
+            'func': input,
+            'params': READMES['rules']
+        },
+        '2': {
+            'func': input,
+            'params': READMES['settings']
+        },
+        '3': {
+            'func': print,
+        }
+    }
+    create_menu(HELP_OPTIONS, HELP_FUNCTIONS)

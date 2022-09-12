@@ -27,7 +27,7 @@ def show_configuration():
 
 def get_settings_from_settings_file():
     if os.path.isfile(JSON_SETTINGS_PATH):
-        print('Wait a few seconds...\nValidating settings...\n')
+        print('\nWait a few seconds...\nValidating settings...\n')
         try:
             settings = Settings.parse_file(JSON_SETTINGS_PATH)
             return settings
