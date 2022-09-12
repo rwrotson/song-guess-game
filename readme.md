@@ -32,6 +32,7 @@ song-guess-game
 Then you will see main menu, where you can configure the game, see current configuration or start the game. Before launching the game, configure it via built-in questionnaire: specify game settings, players number, players' names and paths to music libraries. 
 
 Game supports mp3-, flac- and wav-files as sources of audio.
+
 We recommend to start your first game with ```sample duration = 1.0```.
 
 ## Rules
@@ -42,4 +43,4 @@ Each round each sample can be repeated a certain amount of times, which are spec
 
 The clue allows you to listen to another random fragment of the same song. You can use multiple clues per round, but each time a new fragment will be issued. The clue cannot be repeated, be careful! The number of clues is the same for all rounds of the game and is determined when setting it up.
 
-For more 
+For more detailed rules and help visit help menu within app.
