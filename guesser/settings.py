@@ -1,6 +1,7 @@
 from pydantic import ValidationError
 import typing
 import os
+from json.decoder import JSONDecodeError
 
 from guesser.consts import JSON_SETTINGS_PATH
 from guesser.models import Settings
@@ -34,6 +35,10 @@ def get_settings_from_settings_file():
         
         except ValidationError:
             print('Sorry, your settings are incorrect, reconfigure the game.')
+        except JSONDecodeError:
+            print('The game have not being configured yet!')
+    else:
+        print('\nThe game have not being configured yet!')
     return None
 
 

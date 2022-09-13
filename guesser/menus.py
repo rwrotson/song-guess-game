@@ -69,6 +69,8 @@ def create_main_menu():
 
 def create_game_menu():
     game = initialize_game()
+    if game is None:
+        return None
     for game_round in range(1, game.rounds + 1):
         for user_id in range(0, len(game.users)):
             game.current_round = game_round

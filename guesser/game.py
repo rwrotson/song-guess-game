@@ -9,6 +9,7 @@ def initialize_game():
     Create Game object with all data about the current game
     """
     settings = get_settings_from_settings_file()
+    if settings is None: return None
     # parse game params from settings
     players_number = settings.players_number
     rounds = settings.rounds_number
