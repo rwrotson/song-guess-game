@@ -1,26 +1,68 @@
 [build-system]
-requires = ["setuptools==65", "wheel"]
-build-backend = "setuptools.build_meta"
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
 
-[project]
-name = "song_guess_game"
+[tool.poetry]
+name = "song-guess-game"
+version = "0.0.2"
+description = "Game in which one or more players compete in guessing songs from their musical libraries by random short samples"
+license = "MIT"
 authors = [
-    {name = "Igor Lashkov", email = "rwrotson@yandex.ru"},
+    "Igor Lashkov <rwrotson@yandex.ru>",
 ]
-version = "0.1.0"
 readme = "README.md"
-requires-python = ">=3.8.13"
-license = {text = "Proprietary"}
-classifiers = [
-    "Programming Language :: Python :: 3",
+packages = [{include = "app", from = "src"}]
+repository = "https://github.com/rwrotson/song-guess-game"
+keywords = [
+    "django",
+    "plugin",
+    "authorization",
+    "auth",
+    "authz",
+    "groups",
+    "permissions",
 ]
-dependencies = [
-    "pydantic==1.9.2",
-    "python-magic-bin==0.4.14",
-    "libmagic==1.0",
-    "music-tag==0.4.3",
-    "pydub==0.25.1"
+
+[tool.poetry.dependencies]
+python = "3.12.0"
+pydantic = "2.4.2"
+python-magic-bin = "0.4.14"
+libmagic = "1.0"
+music-tag = "0.4.3"
+pydub = "0.25.1"
+tqdm = "4.66.1"
+cursor = "1.3.5"
+pydantic-settings = "2.0.3"
+pyyaml = "6.0.1"
+
+[tool.poetry.group.dev.dependencies]
+pytest = "7.4.3"
+pytest-cov = "4.1.0"
+mypy = "1.6.1"
+flake8 = "6.1.0"
+tox = "4.11.3"
+black = "23.10.1"
+isort = "5.12.0"
+
+[tool.pytest.ini_options]
+addopts = "--cov=app"
+testpaths = [
+    "tests",
 ]
+
+[tool.mypy]
+mypy_path = "src"
+check_untyped_defs = true
+disallow_any_generics = true
+ignore_missing_imports = true
+no_implicit_optional = true
+show_error_codes = true
+strict_equality = true
+warn_redundant_casts = true
+warn_return_any = true
+warn_unreachable = true
+warn_unused_configs = true
+no_implicit_reexport = true
 
 [project.scripts]
-song-guess-game = "guesser.main:main"
+song-guess-game = "app.main:main"

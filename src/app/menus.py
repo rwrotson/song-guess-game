@@ -1,42 +1,125 @@
 import sys
-
-from guesser.consts import READMES
-from guesser.settings import show_configuration, configure_game
-from guesser.game import (
-    initialize_game, show_current_state_of_game, show_game_results
-)
-from guesser.player import play_sample, play_song
+from enum import StrEnum, EnumMeta
+from dataclasses import dataclass
+from typing import Protocol, Callable
 
 
-def create_menu(options, functions_dict, game=None):
-    options_number = len(functions_dict)
-    try:
-        option = input(options).strip()
+
+from app.consts import READMES
+from app.settings import show_configuration, configure_game
+from app.game import initialize_game, show_current_state_of_game, show_game_results
+from app.player import play_sample, play_song
+
+# abstract factory
+
+class Menu(Protocol):
+    def __init__(self, options_text: str, functions_dict, game=None):
+        ...
+
+    def choose_option(self, option_number: int) -> "Menu":
+        ...
+
+    def show(self):
+        ...
+
+
+menu_options = {
+    "1": {
+        "text": "SHOW current configuration.",
+        "func": show_configuration,
+    }
+}
+
+
+class Input(StrEnum):
+    @property
+    def key_number(self):
+        sort_order = getattr(self, "_sort_order_", None)
+        assert (sort_order is not None, "Input must be a member of an Enum.")
+        return str(sort_order + 1)
+
+
+class MainMenuInput(BaseModel):
+    SHOW_CONFIGURATION = "SHOW current configuration."
+    CONFIGURE_GAME = "CONFIGURE the game."
+    PLAY_GAME = "PLAY the game with previous configuration."
+    GET_HELP = "Get HELP."
+    EXIT = "EXIT."
+
+
+@dataclass(slots=True, frozen=True)
+class MenuOption:
+    input: Input
+    next_menu: "Menu"
+
+
+@dataclass(slots=True, frozen=True)
+class ChoiceOption:
+    number: int
+    text: str
+    next: "Menu"
+
+
+@dataclass(slots=True, frozen=True)
+class InputOption:
+    text: str
+    next: "Menu"
+
+
+@dataclass
+class Menu:
+    heading: str
+    options: list[MenuOption]
+
+
+class MenuObserverFactory:
+    video_class: Type[VideoExporter]
+    audio_class: Type[AudioExporter]
+
+    def __init__(self):
+        self.menu_type = menu_type
+
+    def __call__(self) -> Menu:
+        return Menu(
+            self.video_class(),
+            self.audio_class(),
+        )
+
+
+class MainMenu:
+    def __init__(self, options_text: str, functions_dict, game=None):
+        self.options_text = options_text
+        self.functions_dict = functions_dict
+        self.game = game
+
+    def __str__(self):
+        return self.options_text
+
+    def choose_option(self, option_number: int) -> Callable:
+        func = self.functions_dict[str(option_number)].get('func')
+        params = self.functions_dict[str(option_number)].get('params')
+        if isinstance(params, tuple):
+            return func(*params)
+        elif params is not None:
+            return func(params)
+        else:
+            return func()
+
+    def show(self):
+        options_number = len(self.functions_dict)
+        option = input(self.options_text).strip()
 
         try:
             option = int(option)
         except ValueError:
             print(f'Please ENTER a number between 1 and {options_number}.\n')
-            game = create_menu(options, functions_dict, game=game)
-            return game
+            self.show()
 
         if 0 < option <= options_number:
-            func = functions_dict[str(option)].get('func')
-            params = functions_dict[str(option)].get('params')
-            if isinstance(params, tuple):
-                func(*params)
-            elif params is not None:
-                func(params)
-            else:
-                func()
+            self.choose_option(option)
         else:
             print(f'Please ENTER a number between 1 and {options_number}.\n')
-            game = create_menu(options, functions_dict, game=game)
-        return game
-
-    except KeyboardInterrupt:
-        print('\nOK, goodbye!\n')
-        sys.exit()
+            self.show()
 
 
 def create_main_menu():
@@ -118,7 +201,8 @@ def play_or_repeat_sample(game):
 
 
 def get_a_clue(game):
-    if game.clue_selected == 10: game.clue_selected = 1
+    if game.clue_selected == 10:
+        game.clue_selected = 1
     song = game.users[game.current_user_id].songs[game.current_round - 1]
     if game.clues[game.current_user_id] > 0:
         play_sample(song.samples[game.clue_selected])
@@ -133,8 +217,10 @@ def get_a_clue(game):
 
 def create_answer_menu(game):
     try:
-        answer = input('''\nPrint your suggestion about this song,
-        or say it aloud to your contenders and press ENTER.\n: ''')
+        answer = input(
+            '''\nPrint your suggestion about this song,
+            or say it aloud to your contenders and press ENTER.\n: '''
+        )
     except KeyboardInterrupt:
         print('OK, going back...')
         game = create_round_menu(game)
@@ -143,8 +229,7 @@ def create_answer_menu(game):
     return game
 
 
-def create_evaluation_menu(game, answer=''):
-    if answer.strip() == '': answer = 'no answer'
+def create_evaluation_menu(game, answer="no answer"):
     song = game.users[game.current_user_id].songs[game.current_round - 1]
     song_repr = f'\033[1m{song.artist} - {song.title}\n({song.album}, {song.year})\033[0m'
     print(f'\nYour answer is:\n\033[1m{answer}\033[0m,\nwhile actually it is:\n{song_repr}\n')
@@ -181,34 +266,12 @@ def create_evaluation_menu(game, answer=''):
     return game
 
 
-def play_extended_sample(game, answer):
-    song = game.users[game.current_user_id].songs[game.current_round - 1]
-    play_song(song.song_object, song.sample_time)
-    game = create_evaluation_menu(game, answer)
-    return game
-
-
-def play_full_song(game, answer):
-    song = game.users[game.current_user_id].songs[game.current_round - 1]
-    play_song(song.song_object)
-    game = create_evaluation_menu(game, answer)
-    return game
-
-
-def change_score(game, points):
-    game.score[game.current_user_id] += points
-    if game.results.get(game.current_user_id) is None:
-        game.results[game.current_user_id] = [points]
-    else:
-        game.results[game.current_user_id].append(points)
-    return game
-
-
 def create_help_menu():
     HELP_OPTIONS = '''\nEnter the number of ACTION you want me to do:
             1. Game RULES.
-            2. Help with SETTINGS.
-            3. BACK.\n: '''
+            2. Help with MAIN SETTINGS.
+            3. Help with ADVANCED SETTINGS.
+            4. BACK.\n: '''
 
     HELP_FUNCTIONS = {
         '1': {
