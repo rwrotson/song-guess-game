@@ -1,6 +1,6 @@
 import os
 import yaml
-from typing import Any, Self
+from typing import Any, Self, TypeAlias
 
 from pydantic import BaseModel, Field, field_validator
 from pydantic_settings import BaseSettings
@@ -19,8 +19,9 @@ class SettingsSection(BaseModel):
 
 class GameSettings(SettingsSection):
     """
-    Main settings of the game.
+    Main settings section.
     """
+
     sample_duration: float = Field(
         gt=0.05,
         default=1.0,
@@ -56,6 +57,7 @@ class PlayerSettings(SettingsSection):
     """
     Settings of a player: name and path to her music.
     """
+
     name: str = Field(
         min_length=1,
         max_length=20,
@@ -84,6 +86,7 @@ class DisplaySettings(SettingsSection):
     """
     Settings of how the game is displayed.
     """
+
     color: bool = Field(
         default=True,
         description="Is coloring in the game interface enabled.",
@@ -94,6 +97,7 @@ class SelectionSettings(SettingsSection):
     """
     Settings of a selection of a songs in players' paths.
     """
+
     strategy: str = Field(
         pattern="naive|normalized",
         default="naive",
@@ -103,8 +107,9 @@ class SelectionSettings(SettingsSection):
 
 class SamplingSettings(SettingsSection):
     """
-    Settings of how the samples on songs are chosen.
+    Settings of how the samples inside songs are chosen.
     """
+
     from_: float = Field(
         ge=0,
         default=2.0,
@@ -126,6 +131,7 @@ class TypingSettings(SettingsSection):
     """
     Settings of how the text is typed on display.
     """
+
     enabled: bool = Field(
         default=True,
         description="Is typing of the text enabled, or it is displayed instantly.",
@@ -146,8 +152,9 @@ class PlaybackBarSettings(SettingsSection):
     """
     Settings of how the playback bar is displayed.
     """
+
     empty_char: str = Field(
-        default=".",
+        default="░",
         max_length=1,
         description="Enter the character used for empty part of the bar.",
     )
@@ -162,15 +169,20 @@ class PlaybackBarSettings(SettingsSection):
         description="Enter the character used for space between parts of the bar.",
     )
     bar_length: int = Field(
-        gt=10,
-        lt=100,
+        ge=20,
+        le=100,
         default=50,
         description="Enter the length of the bar in characters.",
     )
     update_frequency: float = Field(
         ge=0.5,
+        le=1.0,
         default=0.5,
         description="Enter the frequency of updating the bar in seconds.",
+    )
+    enable_flashing: bool = Field(
+        default=False,
+        description="Is playback bar flashing enabled.",
     )
     enable_question_mark: bool = Field(
         default=True,
@@ -183,6 +195,10 @@ class PlaybackBarSettings(SettingsSection):
 
 
 class EvaluationSettings(SettingsSection):
+    """
+    Settings of how the answers are evaluated.
+    """
+
     full_answer: int | float = Field(
         ge=0,
         default=1.0,
@@ -211,7 +227,7 @@ class EvaluationSettings(SettingsSection):
     )
 
 
-YamlDict = dict[str, dict[str, Any] | list[dict[str, str]]]
+YamlDict: TypeAlias = dict[str, dict[str, Any] | list[dict[str, str]]]
 
 
 class Settings(BaseSettings):
@@ -219,12 +235,13 @@ class Settings(BaseSettings):
     All game settings.
     Can be initialized from default or from file, can be saved to yaml file.
     """
+
     game: GameSettings = Field(default=GameSettings())
     players: list[PlayerSettings] = Field(default_factory=lambda: [PlayerSettings()])
     typing: TypingSettings = Field(default=TypingSettings())
     selection: SelectionSettings = Field(default=SelectionSettings())
     sampling: SamplingSettings = Field(default=SamplingSettings())
-    evaluation: EvaluationSettings =Field(default=EvaluationSettings())
+    evaluation: EvaluationSettings = Field(default=EvaluationSettings())
 
     @staticmethod
     def _dict_from_yaml_file() -> YamlDict:
@@ -238,23 +255,21 @@ class Settings(BaseSettings):
     def update_from_file(self) -> None:
         yaml_dict = self._dict_from_yaml_file()
 
-        self.game = GameSettings(**yaml_dict["game"])
+        # TODO: universalize for cls
         self.players = [PlayerSettings(**player) for player in yaml_dict["players"]]
+        self.game = GameSettings(**yaml_dict["game"])
         self.typing = TypingSettings(**yaml_dict["typing"])
         self.selection = SelectionSettings(**yaml_dict["selection"])
         self.sampling = SamplingSettings(**yaml_dict["sampling"])
+        self.evaluation = EvaluationSettings(**yaml_dict["evaluation"])
 
     def save_to_file(self) -> None:
         with open(CONFIG_FILE_PATH, "w", encoding="utf-8") as file:
             yaml.dump(self.model_dump(), file, allow_unicode=True)
 
     def set_to_default(self) -> None:
-        self.game = GameSettings()
-        self.typing = TypingSettings()
-        self.selection = SelectionSettings()
-        self.sampling = SamplingSettings()
+        fields = self.model_fields
+        fields.pop("players")
 
-
-settings = Settings()
-settings.set_to_default()
-settings.save_to_file()
+        for settings_section_name, settings_section_value in fields:
+            setattr(self, settings_section_name, settings_section_value)
