@@ -16,9 +16,9 @@ from app.game.utils import RandomTimesStrategy
 
 
 class AllowedFormats(StrEnum):
-    FLAC = 'audio/x-flac'
-    MP3 = 'audio/mpeg'
-    WAV = 'audio/x-wav'
+    FLAC = "audio/x-flac"
+    MP3 = "audio/mpeg"
+    WAV = "audio/x-wav"
 
     @classmethod
     def from_path(cls, path: Path) -> Self:
@@ -48,14 +48,14 @@ class Metadata:
             except (KeyError, IndexError):
                 metadata[field] = None
 
-        metadata['length'] = (int(data['#length'].values[0]) - 5) * 1000
+        metadata["length"] = (int(data["#length"].values[0]) - 5) * 1000
 
         return cls(**metadata)
 
     def __str__(self):
         return bold(
-            f'{self.artist} - {self.title}\n'
-            f'({self.album}, {self.year})',
+            f"{self.artist} - {self.title}\n"
+            f"({self.album}, {self.year})"
         )
 
 
@@ -143,7 +143,7 @@ class Player:
     audiofiles: set[Audiofile]
     songs: list[QuestionSong]
 
-    __slots__ = ['id', 'name', 'library_path', 'audiofiles']
+    __slots__ = ["id", "name", "library_path", "audiofiles"]
 
     def __init__(self, id_: int, name: str, library_path: Path) -> None:
         self.id = id_

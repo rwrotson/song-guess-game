@@ -1,11 +1,19 @@
 import os
 import yaml
+from dataclasses import dataclass
 from typing import Any, Self, TypeAlias
 
 from pydantic import BaseModel, Field, field_validator
+from pydantic.fields import FieldInfo
 from pydantic_settings import BaseSettings
 
 from app.consts import CONFIG_FILE_PATH
+
+
+@dataclass(frozen=True, slots=True)
+class FieldData:
+    name: str
+    value: FieldInfo
 
 
 class SettingsSection(BaseModel):
@@ -13,8 +21,22 @@ class SettingsSection(BaseModel):
     Base class for settings sections.
     """
 
-    def get_field_by_order_number(self, order_number: int) -> Field:
-        return self.model_fields[list(self.model_fields)[order_number - 1]]
+    def get_field_by_order_number(self, order_number: int) -> FieldData:
+        field_name = list(self.model_fields)[order_number - 1]
+        return FieldData(
+            name=field_name,
+            value=self.model_fields[field_name],
+        )
+
+    def validate_field(self, field_name: str, value: Any) -> None:
+        self.__pydantic_validator__.validate_assignment(
+            self.model_construct(),
+            field_name=field_name,
+            field_value=value,
+        )
+
+    def set_field(self, field_name: str, value: Any) -> None:
+        setattr(self, field_name, self.__annotations__[field_name](value))
 
 
 class GameSettings(SettingsSection):
@@ -255,21 +277,19 @@ class Settings(BaseSettings):
     def update_from_file(self) -> None:
         yaml_dict = self._dict_from_yaml_file()
 
-        # TODO: universalize for cls
+        fields = self.model_dump(exclude={"players"})
+
+        for section_name in fields:
+            setattr(self, section_name, self.__annotations__[section_name](**yaml_dict[section_name]))
+
         self.players = [PlayerSettings(**player) for player in yaml_dict["players"]]
-        self.game = GameSettings(**yaml_dict["game"])
-        self.typing = TypingSettings(**yaml_dict["typing"])
-        self.selection = SelectionSettings(**yaml_dict["selection"])
-        self.sampling = SamplingSettings(**yaml_dict["sampling"])
-        self.evaluation = EvaluationSettings(**yaml_dict["evaluation"])
 
     def save_to_file(self) -> None:
         with open(CONFIG_FILE_PATH, "w", encoding="utf-8") as file:
             yaml.dump(self.model_dump(), file, allow_unicode=True)
 
     def set_to_default(self) -> None:
-        fields = self.model_fields
-        fields.pop("players")
+        fields = self.model_dump(exclude={"players"})
 
-        for settings_section_name, settings_section_value in fields:
-            setattr(self, settings_section_name, settings_section_value)
+        for section_name in fields:
+            setattr(self, section_name, self.__annotations__[section_name]())

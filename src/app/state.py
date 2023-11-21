@@ -37,3 +37,4 @@ class State:
     stage: Stage = Stage.MAIN_MENU
     game: GameState = GameState()
     settings: SettingsState = SettingsState()
+    readme: ReadmeState = ReadmeState()

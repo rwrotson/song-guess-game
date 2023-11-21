@@ -22,7 +22,7 @@ async def game_loop():
 
         try:
             presenter.validate()
-        except:
+        except Exception:
             viewer.display(separate_line('Invalid input. Please try again.'))
             continue
 

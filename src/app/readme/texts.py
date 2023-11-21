@@ -69,8 +69,20 @@ _ADVANCED_SETTINGS_TEXT = (
     """
 )
 
+_AUTHORS = (
+    """
+    Game was created by:
+    -- igor lashkov <rwrotson@yandex.ru>
+    
+    If you want to contribute, write email or get in touch with me on github.
+    
+    github.com/rwrotson/song-guess-game
+    """
+)
+
 README_TEXTS = {
     "rules": _RULES_TEXT,
     "settings": _SETTINGS_TEXT,
     "advanced_settings": _ADVANCED_SETTINGS_TEXT,
+    "authors": _AUTHORS,
 }

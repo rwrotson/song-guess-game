@@ -12,8 +12,8 @@ game:
   rounds_number: 10
   sample_duration: 1.0
 players:
-- name: ''
-  path: ''
+- name: fake
+  path: /
 sampling:
   from_: 2.0
   strategy: normalized

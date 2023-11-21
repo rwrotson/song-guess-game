@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from typing import Protocol
 
-from app.formatters import colored_fore, imitate_typing, ForeColor, bold
+from app.formatters import colored_fore, imitate_typing, ForeColor
 
 
 class Viewer(Protocol):
@@ -10,6 +10,8 @@ class Viewer(Protocol):
 
 
 class TypingDisabledViewer:
+    color: ForeColor
+
     def display(self, text: str) -> None:
         print(text)
 
