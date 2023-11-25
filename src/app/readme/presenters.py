@@ -1,5 +1,5 @@
 from app.abstract.presenters import Presenter
-from app.abstract.views import Viewer, TypingDisabledViewer
+from app.abstract.views import Viewer, TypingDisabledViewer, TypingEnabledViewer
 from app.formatters import bold
 from app.readme.models import Readme
 from app.validators import ChoiceInputValidator
@@ -46,7 +46,7 @@ class ReadmePresenter(Presenter):
 
 
 r0 = Readme()
-v = TypingDisabledViewer()
+v = TypingEnabledViewer(min_delay=0.01, max_delay=0.05)
 r = ReadmePresenter(r0, v)
 
 r.run()

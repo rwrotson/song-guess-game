@@ -28,9 +28,7 @@ class SettingsPresenter(Presenter):
 
     def _mangle_input(self) -> None:
         print("\033[F\033[F")
-
         new_text = f"{bold(self._current_field.name)}: {self._current_input}"
-
         self._display(text=f"{new_text}\r")
 
     def _proceed_input(self) -> None:

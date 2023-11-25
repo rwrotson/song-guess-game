@@ -19,7 +19,7 @@ class TypingDisabledViewer:
         self.color = color
 
     def display(self, text: str) -> None:
-        print(colored_fore(text=text, color=self.color))
+        print(colored_fore(text=text, color=self.color), flush=True)
 
 
 class TypingEnabledViewer:

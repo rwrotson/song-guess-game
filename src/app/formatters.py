@@ -1,5 +1,5 @@
+import time
 from enum import StrEnum, auto
-from time import sleep
 from random import randrange
 
 from colorama import init, Fore, Style
@@ -59,8 +59,7 @@ def imitate_typing(text: str, min_delay: int | float, max_delay: int | float) ->
         min_delay = int(min_delay * 1000)
     if isinstance(max_delay, float):
         max_delay = int(max_delay * 1000)
-
     for char in text:
-        print(char, end='', flush=True)
-        delay = randrange(min_delay, max_delay)
-        sleep(delay)
+        print(char, end="", flush=True)
+        delay = randrange(min_delay, max_delay) / 1000
+        time.sleep(delay)
