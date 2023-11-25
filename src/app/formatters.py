@@ -23,6 +23,9 @@ class ForeColor(StrEnum):
 
 
 def colored_fore(text: str, color: ForeColor) -> str:
+    if color == ForeColor.WHITE:
+        return text
+
     color_mapping = {
         ForeColor.RED: Fore.RED,
         ForeColor.GREEN: Fore.GREEN,
@@ -30,7 +33,6 @@ def colored_fore(text: str, color: ForeColor) -> str:
         ForeColor.BLUE: Fore.BLUE,
         ForeColor.MAGENTA: Fore.MAGENTA,
         ForeColor.CYAN: Fore.CYAN,
-        ForeColor.WHITE: Fore.WHITE,
     }
 
     return color_mapping[color] + text + Fore.RESET

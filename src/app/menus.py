@@ -265,25 +265,3 @@ def create_evaluation_menu(game, answer="no answer"):
     game = create_menu(EVALUATION_OPTIONS, EVALUATION_FUNCTIONS)
     return game
 
-
-def create_help_menu():
-    HELP_OPTIONS = '''\nEnter the number of ACTION you want me to do:
-            1. Game RULES.
-            2. Help with MAIN SETTINGS.
-            3. Help with ADVANCED SETTINGS.
-            4. BACK.\n: '''
-
-    HELP_FUNCTIONS = {
-        '1': {
-            'func': input,
-            'params': READMES['rules']
-        },
-        '2': {
-            'func': input,
-            'params': READMES['settings']
-        },
-        '3': {
-            'func': print,
-        }
-    }
-    create_menu(HELP_OPTIONS, HELP_FUNCTIONS)

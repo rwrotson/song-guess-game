@@ -12,7 +12,7 @@ from pydub.playback import play
 
 from app.exceptions import NotSupportedFormatError
 from app.formatters import bold
-from app.game.utils import RandomTimesStrategy
+from app.game.selection import RandomTimesStrategy
 
 
 class AllowedFormats(StrEnum):

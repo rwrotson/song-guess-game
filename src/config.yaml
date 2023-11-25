@@ -1,9 +1,3 @@
-evaluation:
-  clue_discont: 0.1
-  full_answer: 1.0
-  half_answer: 0.5
-  no_answer: 0.0
-  wrong_answer: 0.0
 game:
   clues_number: 10
   clues_strategy: new_next
@@ -24,3 +18,9 @@ typing:
   enabled: true
   max_delay: 0.1
   min_delay: 0.01
+evaluation:
+  clue_discont: 0.1
+  full_answer: 1.0
+  half_answer: 0.5
+  no_answer: 0.0
+  wrong_answer: 0.0

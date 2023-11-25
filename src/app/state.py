@@ -1,14 +1,10 @@
 from dataclasses import dataclass
 from enum import StrEnum, auto
 
-from pydantic import BaseModel
-
 
 @dataclass(slots=True)
 class SettingsState:
-    previous_setting: BaseModel = None
-    current_setting: BaseModel = None
-    current_setting_step: int = 1
+    pass
 
 
 class GameStage(StrEnum):

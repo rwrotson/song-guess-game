@@ -1,45 +1,16 @@
 import os
+import subprocess
 import yaml
-from dataclasses import dataclass
 from typing import Any, Self, TypeAlias
 
-from pydantic import BaseModel, Field, field_validator
-from pydantic.fields import FieldInfo
+from pydantic import Field, field_validator
 from pydantic_settings import BaseSettings
 
 from app.consts import CONFIG_FILE_PATH
+from app.models import BaseModel
 
 
-@dataclass(frozen=True, slots=True)
-class FieldData:
-    name: str
-    value: FieldInfo
-
-
-class SettingsSection(BaseModel):
-    """
-    Base class for settings sections.
-    """
-
-    def get_field_by_order_number(self, order_number: int) -> FieldData:
-        field_name = list(self.model_fields)[order_number - 1]
-        return FieldData(
-            name=field_name,
-            value=self.model_fields[field_name],
-        )
-
-    def validate_field(self, field_name: str, value: Any) -> None:
-        self.__pydantic_validator__.validate_assignment(
-            self.model_construct(),
-            field_name=field_name,
-            field_value=value,
-        )
-
-    def set_field(self, field_name: str, value: Any) -> None:
-        setattr(self, field_name, self.__annotations__[field_name](value))
-
-
-class GameSettings(SettingsSection):
+class GameSettings(BaseModel):
     """
     Main settings section.
     """
@@ -75,7 +46,7 @@ class GameSettings(SettingsSection):
     )
 
 
-class PlayerSettings(SettingsSection):
+class PlayerSettings(BaseModel):
     """
     Settings of a player: name and path to her music.
     """
@@ -104,7 +75,7 @@ class PlayerSettings(SettingsSection):
         return path
 
 
-class DisplaySettings(SettingsSection):
+class DisplaySettings(BaseModel):
     """
     Settings of how the game is displayed.
     """
@@ -115,7 +86,7 @@ class DisplaySettings(SettingsSection):
     )
 
 
-class SelectionSettings(SettingsSection):
+class SelectionSettings(BaseModel):
     """
     Settings of a selection of a songs in players' paths.
     """
@@ -127,7 +98,7 @@ class SelectionSettings(SettingsSection):
     )
 
 
-class SamplingSettings(SettingsSection):
+class SamplingSettings(BaseModel):
     """
     Settings of how the samples inside songs are chosen.
     """
@@ -149,7 +120,7 @@ class SamplingSettings(SettingsSection):
     )
 
 
-class TypingSettings(SettingsSection):
+class TypingSettings(BaseModel):
     """
     Settings of how the text is typed on display.
     """
@@ -170,7 +141,7 @@ class TypingSettings(SettingsSection):
     )
 
 
-class PlaybackBarSettings(SettingsSection):
+class PlaybackBarSettings(BaseModel):
     """
     Settings of how the playback bar is displayed.
     """
@@ -216,7 +187,7 @@ class PlaybackBarSettings(SettingsSection):
     )
 
 
-class EvaluationSettings(SettingsSection):
+class EvaluationSettings(BaseModel):
     """
     Settings of how the answers are evaluated.
     """
@@ -293,3 +264,8 @@ class Settings(BaseSettings):
 
         for section_name in fields:
             setattr(self, section_name, self.__annotations__[section_name]())
+
+    @staticmethod
+    def edit_config():
+        editor = os.environ.get('EDITOR', 'vi')
+        subprocess.call([editor, CONFIG_FILE_PATH])

@@ -1,6 +1,5 @@
 _RULES_TEXT = (
-    """
-    Each round one or more players guesses one song
+    """Each round one or more players guesses one song
     from their musical libraries by its short sample,
     one player guess after another.
 
@@ -29,13 +28,12 @@ _RULES_TEXT = (
 
     After the end of the game, 
         the results are summed up
-        and winners are being revealed.\n: 
+        and winners are being revealed.
     """
 )
 
 _SETTINGS_TEXT = (
-    """
-    Before play you need to configure the game. 
+    """Before play you need to configure the game. 
     
     You can do it in two ways:
     -- by interactive questionnaries
@@ -59,8 +57,7 @@ _SETTINGS_TEXT = (
         -- rounds_number    : number of songs each player tries 
                               to guess, number of rounds of the game
                               (can't be less than the number of songs
-                              in the smallest player's library)\n: 
-    """
+                              in the smallest player's library)"""
 )
 
 _ADVANCED_SETTINGS_TEXT = (
@@ -80,9 +77,10 @@ _AUTHORS = (
     """
 )
 
+
 README_TEXTS = {
     "rules": _RULES_TEXT,
     "settings": _SETTINGS_TEXT,
-    "advanced_settings": _ADVANCED_SETTINGS_TEXT,
+    "advanced settings": _ADVANCED_SETTINGS_TEXT,
     "authors": _AUTHORS,
 }

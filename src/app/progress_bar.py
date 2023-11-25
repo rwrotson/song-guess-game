@@ -4,7 +4,7 @@ from datetime import datetime
 from typing import Iterator
 
 from app.formatters import blue, magenta, red
-from app.settings.models import PlaybackBarSettings, Settings
+from app.settings.models import PlaybackBarSettings
 
 import cursor
 
@@ -62,10 +62,6 @@ class TimeDisplay:
 
 @dataclass(frozen=True, slots=True)
 class PlaybackParams:
-    """
-    Times in ms.
-    """
-
     song_length: int
     start_time: int
     question_mark: int
@@ -78,6 +74,8 @@ class BarDisplay:
 
     Time in ms.
     """
+
+    __slots__ = ["_config", "_qmark_bar_n", "_cmark_bar_ns", "current_bar_n", "_bar", "_prev_bar"]
 
     def __init__(self, params: PlaybackParams, config: PlaybackBarSettings) -> None:
         self._config = config
@@ -92,7 +90,6 @@ class BarDisplay:
         self._prev_bar = ""
         for _ in range(current_bar_n):
             self.update()
-        #self._prev_bar = self._bar[:-1] if self.current_bar_n > 1 else ""
 
     def _empty_bar(self, length: int) -> str:
         return self._config.empty_char * length
@@ -123,10 +120,14 @@ class BarDisplay:
 
 class Playback:
     """
-    Progress bar for playback.
+    Progress display for playback with bar and time displays.
 
     Time in ms.
     """
+
+    __slots__ = [
+        "_config", "_song_length", "_start_time", "_current_time", "_clock", "_bar", "_time", "_display_generator"
+    ]
 
     def __init__(self, params: PlaybackParams, config: PlaybackBarSettings) -> None:
         self._config = config
@@ -173,30 +174,3 @@ class Playback:
 
     def show(self) -> None:
         print(next(self._display_generator), end=" \r")
-
-
-pl = Playback(
-    params=PlaybackParams(
-        song_length=100000,
-        question_mark=10000,
-        clue_marks=[20000, 40000, 60000, 80000],
-        start_time=40000,
-    ),
-    config=PlaybackBarSettings(
-        bar_length=50,
-        full_char="█",
-        empty_char="░",
-        space_char=" ",
-        update_frequency=0.5,
-        enable_flashing=False,
-        enable_question_mark=True,
-        enable_clue_marks=True,
-    ),
-)
-bar_display = pl._bar
-# for _ in range(4):
-#     print("c ", bar_display.current_bar)
-#     print("p ", bar_display.previous_bar)
-#     bar_display.update()
-#
-pl.start()
