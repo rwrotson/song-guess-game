@@ -26,16 +26,20 @@ class SettingsPresenter(Presenter):
         else:
             self._current_input = self._current_field.value.default
 
+    def _mangle_input(self) -> None:
+        print("\033[F\033[F")
+
+        new_text = f"{bold(self._current_field.name)}: {self._current_input}"
+
+        self._display(text=f"{new_text}\r")
+
+    def _proceed_input(self) -> None:
+        self._model.set_field(self._current_field.name, self._current_input)
+        self._current_field = self._update_current_field()
+
     def _update_current_field(self) -> FieldData:
         return self._model.get_field_by_order_number(self._current_step)
 
-    def run(self) -> BaseModel:
+    def run(self) -> None:
         for self._current_step in range(1, len(self._model.model_fields) + 1):
-            self._current_field = self._update_current_field()
-
-            self._show_menu()
-            self._receive_input()
-
-            self._model.set_field(self._current_field.name, self._current_input)
-
-        return self._model
+            super().run()

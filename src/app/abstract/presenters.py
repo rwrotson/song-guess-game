@@ -24,8 +24,10 @@ class Presenter(ABC):
 
         self._current_input: str = ""
 
-    def _display(self, text: str) -> None:
-        self._viewer.display(text=separate_line(text))
+    def _display(self, text: str, is_separate_line: bool = True) -> None:
+        if is_separate_line:
+            text = separate_line(text)
+        self._viewer.display(text=text)
 
     @abstractmethod
     def _show_input_request(self):
@@ -51,5 +53,13 @@ class Presenter(ABC):
         ...
 
     @abstractmethod
-    def run(self) -> None:
+    def _proceed_input(self) -> None:
         ...
+
+    def run(self) -> None:
+        self._show_input_request()
+
+        self._receive_input()
+        self._mangle_input()
+
+        self._proceed_input()

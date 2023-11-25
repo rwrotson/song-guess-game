@@ -1,5 +1,6 @@
 _RULES_TEXT = (
-    """Each round one or more players guesses one song
+    """
+    Each round one or more players guesses one song
     from their musical libraries by its short sample,
     one player guess after another.
 
@@ -33,7 +34,8 @@ _RULES_TEXT = (
 )
 
 _SETTINGS_TEXT = (
-    """Before play you need to configure the game. 
+    """
+    Before play you need to configure the game. 
     
     You can do it in two ways:
     -- by interactive questionnaries
@@ -57,23 +59,24 @@ _SETTINGS_TEXT = (
         -- rounds_number    : number of songs each player tries 
                               to guess, number of rounds of the game
                               (can't be less than the number of songs
-                              in the smallest player's library)"""
+                              in the smallest player's library)
+    """
 )
 
 _ADVANCED_SETTINGS_TEXT = (
     """
-    Advanced
+    Advanced settings
     """
 )
 
 _AUTHORS = (
     """
     Game was created by:
-    -- igor lashkov <rwrotson@yandex.ru>
+        -- igor lashkov <rwrotson@yandex.ru>
     
     If you want to contribute, write email or get in touch with me on github.
     
-    github.com/rwrotson/song-guess-game
+        github.com/rwrotson/song-guess-game
     """
 )
 

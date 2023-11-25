@@ -51,7 +51,7 @@ def magenta(text: str) -> str:
 
 
 def separate_line(text: str) -> str:
-    return "\n" + text + "\n"
+    return text + "\n"
 
 
 def imitate_typing(text: str, min_delay: int | float, max_delay: int | float) -> None:
