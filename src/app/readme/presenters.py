@@ -14,7 +14,8 @@ class ReadmePresenter(Presenter):
     def _show_input_request(self):
         request_text = "Enter the number of INFO you want to get:"
         for i in range(1, self.options_number + 1):
-            request_text += f"\n\t{i}. {bold(self._model.get_section_name_by_order_number(i).upper())}"
+            section_name = self._model.get_section_name_by_order_number(i)
+            request_text += f"\n\t{i}. {bold(section_name.upper())}"
 
         self._display(text=request_text)
 
@@ -43,10 +44,3 @@ class ReadmePresenter(Presenter):
 
         if not int(self._current_input) == self.options_number:
             self._await_input_to_return()
-
-
-r0 = Readme()
-v = TypingEnabledViewer(min_delay=0.01, max_delay=0.05)
-r = ReadmePresenter(r0, v)
-
-r.run()

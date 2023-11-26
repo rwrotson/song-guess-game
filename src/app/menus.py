@@ -1,26 +1,4 @@
-import sys
-from enum import StrEnum, EnumMeta
-from dataclasses import dataclass
-from typing import Protocol, Callable
 
-
-
-from app.consts import READMES
-from app.settings import show_configuration, configure_game
-from app.game import initialize_game, show_current_state_of_game, show_game_results
-from app.player import play_sample, play_song
-
-# abstract factory
-
-class Menu(Protocol):
-    def __init__(self, options_text: str, functions_dict, game=None):
-        ...
-
-    def choose_option(self, option_number: int) -> "Menu":
-        ...
-
-    def show(self):
-        ...
 
 
 menu_options = {

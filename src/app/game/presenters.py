@@ -1,7 +1,3 @@
-class MainMenuPresenter:
-    pass
-
-
 class QuestionPresenter:
     pass
 
@@ -11,4 +7,8 @@ class AnswerPresenter:
 
 
 class EvaluationPresenter:
+    pass
+
+
+class ScorePresenter:
     pass

@@ -6,6 +6,10 @@ from app.validators import TextInputValidator
 
 
 class SettingsPresenter(Presenter):
+    pass
+
+
+class SettingsSectionPresenter(Presenter):
     def __init__(self, model: BaseModel, viewer: Viewer) -> None:
         super().__init__(model, viewer)
 

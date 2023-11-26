@@ -6,13 +6,14 @@ from typing import Any, Self, TypeAlias
 from pydantic import Field, field_validator
 from pydantic_settings import BaseSettings
 
+from app.abstract.models import BaseModel
 from app.consts import CONFIG_FILE_PATH
-from app.models import BaseModel
+from app.utils import get_singleton_instance
 
 
 class GameSettings(BaseModel):
     """
-    Main settings section.
+    Game settings section defining specifications of rules.
     """
 
     sample_duration: float = Field(
@@ -231,9 +232,12 @@ class Settings(BaseSettings):
 
     game: GameSettings = Field(default=GameSettings())
     players: list[PlayerSettings] = Field(default_factory=lambda: [PlayerSettings()])
-    typing: TypingSettings = Field(default=TypingSettings())
+
+    display: DisplaySettings = Field(default=DisplaySettings())
     selection: SelectionSettings = Field(default=SelectionSettings())
     sampling: SamplingSettings = Field(default=SamplingSettings())
+    typing: TypingSettings = Field(default=TypingSettings())
+    playback_bar: PlaybackBarSettings = Field(default=PlaybackBarSettings())
     evaluation: EvaluationSettings = Field(default=EvaluationSettings())
 
     @staticmethod
@@ -265,7 +269,41 @@ class Settings(BaseSettings):
         for section_name in fields:
             setattr(self, section_name, self.__annotations__[section_name]())
 
-    @staticmethod
-    def edit_config():
+    @property
+    def config_file_as_str(self) -> str:
+        with open(CONFIG_FILE_PATH, 'r') as file:
+            return file.read()
+
+    def edit_config_file(self) -> None:
         editor = os.environ.get('EDITOR', 'vi')
         subprocess.call([editor, CONFIG_FILE_PATH])
+        self.update_from_file()
+
+
+def get_settings() -> Settings:
+    return get_singleton_instance(Settings).load_from_file()
+
+
+class MainSettings(BaseModel):
+    """
+    Main settings section. Used for menu generation.
+    """
+
+    game: GameSettings = Field(default=GameSettings())
+    players: list[PlayerSettings] = Field(default_factory=lambda: [PlayerSettings()])
+
+
+class AdvancedSettings(BaseModel):
+    """
+    Advanced settings section. Used for menu generation.
+    """
+
+    display: DisplaySettings = Field(default=DisplaySettings())
+    selection: SelectionSettings = Field(default=SelectionSettings())
+    sampling: SamplingSettings = Field(default=SamplingSettings())
+    typing: TypingSettings = Field(default=TypingSettings())
+    playback_bar: PlaybackBarSettings = Field(default=PlaybackBarSettings())
+    evaluation: EvaluationSettings = Field(default=EvaluationSettings())
+
+    def __new__(cls, *args, **kwargs):
+        return super().__new__(cls, *args, **kwargs)
