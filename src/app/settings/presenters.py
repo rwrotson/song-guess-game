@@ -1,3 +1,5 @@
+from typing import override
+
 from app.formatters import bold
 from app.abstract.models import BaseModel, FieldData
 from app.abstract.presenters import Presenter
@@ -42,6 +44,7 @@ class SettingsSectionPresenter(Presenter):
     def _update_current_field(self) -> FieldData:
         return self._model.get_field_by_order_number(self._current_step)
 
+    @override
     def run(self) -> None:
         for self._current_step in range(1, len(self._model.model_fields) + 1):
             super().run()

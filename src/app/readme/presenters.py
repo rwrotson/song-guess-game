@@ -1,3 +1,5 @@
+from typing import override
+
 from app.abstract.presenters import Presenter
 from app.abstract.views import Viewer, TypingDisabledViewer, TypingEnabledViewer
 from app.formatters import bold
@@ -39,6 +41,7 @@ class ReadmePresenter(Presenter):
         self._display(text="Press ENTER to continue...")
         input()
 
+    @override
     def run(self) -> None:
         super().run()
 

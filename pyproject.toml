@@ -3,8 +3,8 @@ requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
 
 [tool.poetry]
-name = "song-guess-game"
-version = "0.0.2"
+name = "songs-roulette"
+version = "0.1.0"
 description = "Game in which one or more players compete in guessing songs from their musical libraries by random short samples"
 license = "MIT"
 authors = [
@@ -12,15 +12,12 @@ authors = [
 ]
 readme = "README.md"
 packages = [{include = "app", from = "src"}]
-repository = "https://github.com/rwrotson/song-guess-game"
+repository = "https://github.com/rwrotson/songs-roulette"
 keywords = [
-    "django",
-    "plugin",
-    "authorization",
-    "auth",
-    "authz",
-    "groups",
-    "permissions",
+    "music",
+    "game",
+    "song guessing",
+    "roulette",
 ]
 
 [tool.poetry.dependencies]
@@ -65,4 +62,4 @@ warn_unused_configs = true
 no_implicit_reexport = true
 
 [project.scripts]
-song-guess-game = "app.main:main"
+songs-roulette = "app.main:main"
