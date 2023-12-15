@@ -1,19 +1,27 @@
 import os
 import subprocess
 import yaml
+from pathlib import Path
 from typing import Any, Self, TypeAlias
 
-from pydantic import Field, field_validator
+from pydantic import BaseModel, Field, field_validator
 from pydantic_settings import BaseSettings
 
-from app.abstract.models import BaseModel
+from app.abstract.models import OrderedModel
 from app.consts import CONFIG_FILE_PATH
 from app.utils import get_singleton_instance
 
 
-class GameSettings(BaseModel):
+class SettingsSection(BaseModel, OrderedModel):
     """
-    Game settings section defining specifications of rules.
+    Base class for all settings sections.
+    """
+    pass
+
+
+class GameSettings(SettingsSection):
+    """
+    Main game settings section defining specifications of rules.
     """
 
     sample_duration: float = Field(
@@ -47,7 +55,7 @@ class GameSettings(BaseModel):
     )
 
 
-class PlayerSettings(BaseModel):
+class PlayerSettings(SettingsSection):
     """
     Settings of a player: name and path to her music.
     """
@@ -76,18 +84,32 @@ class PlayerSettings(BaseModel):
         return path
 
 
-class DisplaySettings(BaseModel):
+class DisplaySettings(SettingsSection):
     """
     Settings of how the game is displayed.
     """
 
-    color: bool = Field(
+    color_enabled: bool = Field(
         default=True,
         description="Is coloring in the game interface enabled.",
     )
+    typing_enabled: bool = Field(
+        default=True,
+        description="Is typing of the text enabled, or it is displayed instantly.",
+    )
+    min_delay: float = Field(
+        gt=0.0,
+        default=0.01,
+        description="Enter minimal number of seconds between two characters.",
+    )
+    max_delay: float = Field(
+        gt=0.0,
+        default=0.1,
+        description="Enter maximum number of seconds between two characters.",
+    )
 
 
-class SelectionSettings(BaseModel):
+class SelectionSettings(SettingsSection):
     """
     Settings of a selection of a songs in players' paths.
     """
@@ -99,7 +121,7 @@ class SelectionSettings(BaseModel):
     )
 
 
-class SamplingSettings(BaseModel):
+class SamplingSettings(SettingsSection):
     """
     Settings of how the samples inside songs are chosen.
     """
@@ -121,28 +143,7 @@ class SamplingSettings(BaseModel):
     )
 
 
-class TypingSettings(BaseModel):
-    """
-    Settings of how the text is typed on display.
-    """
-
-    enabled: bool = Field(
-        default=True,
-        description="Is typing of the text enabled, or it is displayed instantly.",
-    )
-    min_delay: float = Field(
-        gt=0.0,
-        default=0.01,
-        description="Enter minimal number of seconds between two characters.",
-    )
-    max_delay: float = Field(
-        gt=0.0,
-        default=0.1,
-        description="Enter maximum number of seconds between two characters.",
-    )
-
-
-class PlaybackBarSettings(BaseModel):
+class PlaybackBarSettings(SettingsSection):
     """
     Settings of how the playback bar is displayed.
     """
@@ -188,7 +189,7 @@ class PlaybackBarSettings(BaseModel):
     )
 
 
-class EvaluationSettings(BaseModel):
+class EvaluationSettings(SettingsSection):
     """
     Settings of how the answers are evaluated.
     """
@@ -221,6 +222,24 @@ class EvaluationSettings(BaseModel):
     )
 
 
+class ServicePathsSettings(SettingsSection):
+    """
+    Settings of where to store service files.
+    """
+    config_path: Path = Field(
+        default=CONFIG_FILE_PATH,
+        description="Enter the path to the config file.",
+    )
+    game_pickle_path: Path = Field(
+        default=Path("game.pickle"),
+        description="Enter the path to the game pickle file.",
+    )
+    history_log_path: Path = Field(
+        default=Path("history.yaml"),
+        description="Enter the path to the history file.",
+    )
+
+
 YamlDict: TypeAlias = dict[str, dict[str, Any] | list[dict[str, str]]]
 
 
@@ -236,9 +255,9 @@ class Settings(BaseSettings):
     display: DisplaySettings = Field(default=DisplaySettings())
     selection: SelectionSettings = Field(default=SelectionSettings())
     sampling: SamplingSettings = Field(default=SamplingSettings())
-    typing: TypingSettings = Field(default=TypingSettings())
     playback_bar: PlaybackBarSettings = Field(default=PlaybackBarSettings())
     evaluation: EvaluationSettings = Field(default=EvaluationSettings())
+    # paths: ServicePathsSettings = Field(default=ServicePathsSettings())
 
     @staticmethod
     def _dict_from_yaml_file() -> YamlDict:
@@ -282,28 +301,3 @@ class Settings(BaseSettings):
 
 def get_settings() -> Settings:
     return get_singleton_instance(Settings).load_from_file()
-
-
-class MainSettings(BaseModel):
-    """
-    Main settings section. Used for menu generation.
-    """
-
-    game: GameSettings = Field(default=GameSettings())
-    players: list[PlayerSettings] = Field(default_factory=lambda: [PlayerSettings()])
-
-
-class AdvancedSettings(BaseModel):
-    """
-    Advanced settings section. Used for menu generation.
-    """
-
-    display: DisplaySettings = Field(default=DisplaySettings())
-    selection: SelectionSettings = Field(default=SelectionSettings())
-    sampling: SamplingSettings = Field(default=SamplingSettings())
-    typing: TypingSettings = Field(default=TypingSettings())
-    playback_bar: PlaybackBarSettings = Field(default=PlaybackBarSettings())
-    evaluation: EvaluationSettings = Field(default=EvaluationSettings())
-
-    def __new__(cls, *args, **kwargs):
-        return super().__new__(cls, *args, **kwargs)

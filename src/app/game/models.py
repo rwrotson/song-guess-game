@@ -1,9 +1,9 @@
 import os
 import random
-from dataclasses import dataclass
-from enum import StrEnum
+from dataclasses import dataclass, field
+from enum import StrEnum, auto
 from pathlib import Path
-from typing import Self
+from typing import Generator, Self
 
 import music_tag
 from magic import from_file as get_file_format
@@ -87,13 +87,74 @@ class Sample:
         self.sample.play()
 
 
-@dataclass(frozen=True, slots=True)
+class HelpUsage:
+    __slots__ = ("_max_repeats", "_max_clues", "_repeats_used", "_clues_used")
+
+    def __init__(self, max_repeats: int, max_clues: int):
+        self._max_repeats = max_repeats
+        self._max_clues = max_clues
+
+        self._repeats_used = 0
+        self._clues_used = 0
+
+    def use_repeat(self):
+        if self._repeats_used + 1 <= self._max_repeats:
+            self._repeats_used += 1
+
+    def use_clue(self):
+        if self._clues_used + 1 <= self._max_clues:
+            self._clues_used += 1
+
+    @property
+    def max_repeats(self):
+        return self._max_repeats
+
+    @property
+    def max_clues(self):
+        return self._max_clues
+
+    @property
+    def repeats_used(self) -> int:
+        return self._repeats_used
+
+    @property
+    def clues_used(self) -> int:
+        return self._clues_used
+
+    @property
+    def repeats_left(self) -> int:
+        return self._max_repeats - self._repeats_used
+
+    @property
+    def clues_left(self) -> int:
+        return self._max_clues - self._clues_used
+
+    def __str__(self):
+        return f"<Repeats: {self.repeats_left}, clues: {self.clues_left}>"
+
+
+class Evaluation(StrEnum):
+    FULL_ANSWER = auto()
+    HALF_ANSWER = auto()
+    WRONG_ANSWER = auto()
+    NO_ANSWER = auto()
+
+
+@dataclass(slots=True)
+class Answer:
+    answer_prompt: str
+    evaluation: Evaluation
+
+
+@dataclass(slots=True)
 class QuestionSong:
     audio: PlayableSegment
     metadata: Metadata
     question_sample: Sample
     clue_samples: list[Sample]
-    evaluation: float = 0.0
+
+    help_usage: HelpUsage = field(default_factory=HelpUsage)
+    answer: Answer | None = None
 
     @classmethod
     def from_path(cls, path: Path):
@@ -131,25 +192,24 @@ class Audiofile:
         self.filename = path.name
 
 
-@dataclass(frozen=True, slots=True)
-class Score:
-    pass
-
-
 class Player:
     id: int
     name: str
     library_path: Path
     audiofiles: set[Audiofile]
     songs: list[QuestionSong]
+    help_usage: HelpUsage
 
-    __slots__ = ["id", "name", "library_path", "audiofiles"]
+    __slots__ = ("id", "name", "library_path", "color", "audiofiles", "songs", "help_usage")
 
-    def __init__(self, id_: int, name: str, library_path: Path) -> None:
+    def __init__(self, *, id_: int, name: str, library_path: Path) -> None:
         self.id = id_
         self.name = name
         self.library_path = library_path
+
         self.audiofiles = self.get_all_audiofiles()
+        self.songs = []
+        self.help_usage = HelpUsage()
 
     def get_all_audiofiles(self) -> set[Audiofile]:
         all_files = set()
@@ -161,9 +221,83 @@ class Player:
             if get_file_format(f, mime=True) in AllowedFormats
         }
 
-    def _choose_audiofiles(self, quantity: int) -> list[Audiofile]:
+    def _choose_n_audiofiles(self, quantity: int) -> list[Audiofile]:
         return random.sample(self.audiofiles, quantity)
 
     def _initialize_song(self, audiofile: Audiofile) -> QuestionSong:
         pass
 
+
+class GameCounter:
+    _current_player_id: int
+    _current_round: int
+
+    __slots__ = ("_current_player_id", "_current_round", "_players_counter", "_rounds_counter")
+
+    def __init__(self, players: int, rounds: int):
+        self._players_counter = self.players_counter_gen(players)
+        self._rounds_counter = self.rounds_counter_gen(rounds)
+
+        next(self)
+
+    @property
+    def current_player_id(self) -> int:
+        return self._current_player_id
+
+    @property
+    def current_round(self) -> int:
+        return self._current_round
+
+    @staticmethod
+    def players_counter_gen(players_number: int) -> Generator[int, None, None]:
+        while True:
+            for i in range(players_number):
+                yield i
+
+    @staticmethod
+    def rounds_counter_gen(rounds_number: int) -> Generator[int, None, None]:
+        for i in range(rounds_number):
+            yield i + 1
+
+    def __next__(self):
+        self._current_player_id = next(self._players_counter)
+        if self._current_player_id == 0:
+            self._current_round = next(self._rounds_counter)
+        return self
+
+    def __str__(self):
+        return f"Round {self.current_round}, Player {self.current_player_id}"
+
+
+class Game:
+    rounds: int
+    players: list[Player]
+    game_counter: GameCounter
+
+    __slots__ = ("rounds", "players", "game_counter")
+
+    def __init__(self, players: list[Player], rounds: int) -> None:
+        self.reset_game(players, rounds)
+
+    def reset_game(self, players: list[Player], rounds: int) -> None:
+        self.rounds = rounds
+        self.players = players
+        self.game_counter = GameCounter(players=len(players), rounds=rounds)
+
+    @classmethod
+    def from_pickle(cls, path: Path) -> Self:
+        pass
+
+    def pickle(self, path: Path) -> None:
+        pass
+
+
+class History:
+    def __init__(self, *, game: Game):
+        self.answers = {}
+
+    def score_for_player_id(self, player_id: int, /) -> list[float]:
+        pass
+
+    def score_for_round(self, round_number: int, /) -> list[float]:
+        pass

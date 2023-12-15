@@ -27,7 +27,7 @@ pip install .
 
 After install, run the game by executing:
 ```
-song-guess-game
+songs-roulette
 ```
 Then you will see main menu, where you can configure the game, see current configuration or start the game. Before launching the game, configure it via built-in questionnaire: specify game settings, players number, players' names and paths to music libraries. 
 

@@ -14,7 +14,7 @@ class Clock:
     Class for timing the playback. Works as a stopwatch.
     """
 
-    __slots__ = ["_start_time", "_current_time"]
+    __slots__ = ("_start_time", "_current_time")
 
     def __init__(self) -> None:
         self._start_time = None
@@ -37,9 +37,9 @@ class TimeDisplay:
     Class for displaying time of the song in the following format: mm:ss/mm:ss.
     """
 
-    __slots__ = ["_song_length", "_current_time"]
+    __slots__ = ("_song_length", "_current_time")
 
-    def __init__(self, song_length: int, current_time: int) -> None:
+    def __init__(self, *, song_length: int, current_time: int) -> None:
         self._song_length = song_length // 1000
         self._current_time = current_time // 1000
 
@@ -75,9 +75,9 @@ class BarDisplay:
     Time in ms.
     """
 
-    __slots__ = ["_config", "_qmark_bar_n", "_cmark_bar_ns", "current_bar_n", "_bar", "_prev_bar"]
+    __slots__ = ("_config", "_qmark_bar_n", "_cmark_bar_ns", "current_bar_n", "_bar", "_prev_bar")
 
-    def __init__(self, params: PlaybackParams, config: PlaybackBarSettings) -> None:
+    def __init__(self, *, params: PlaybackParams, config: PlaybackBarSettings) -> None:
         self._config = config
 
         bar_length_in_ms = params.song_length // config.bar_length
@@ -125,11 +125,18 @@ class Playback:
     Time in ms.
     """
 
-    __slots__ = [
-        "_config", "_song_length", "_start_time", "_current_time", "_clock", "_bar", "_time", "_display_generator"
-    ]
+    __slots__ = (
+        "_config",
+        "_song_length",
+        "_start_time",
+        "_current_time",
+        "_clock",
+        "_bar",
+        "_time",
+        "_display_generator",
+    )
 
-    def __init__(self, params: PlaybackParams, config: PlaybackBarSettings) -> None:
+    def __init__(self, *, params: PlaybackParams, config: PlaybackBarSettings) -> None:
         self._config = config
 
         self._song_length = params.song_length

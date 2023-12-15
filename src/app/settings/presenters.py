@@ -2,16 +2,11 @@ from typing import override
 
 from app.formatters import bold
 from app.abstract.models import BaseModel, FieldData
-from app.abstract.presenters import Presenter
 from app.abstract.views import Viewer
 from app.validators import TextInputValidator
 
 
-class SettingsPresenter(Presenter):
-    pass
-
-
-class SettingsSectionPresenter(Presenter):
+class SettingsSectionPresenter:
     def __init__(self, model: BaseModel, viewer: Viewer) -> None:
         super().__init__(model, viewer)
 

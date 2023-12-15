@@ -84,6 +84,6 @@ _AUTHORS = (
 README_TEXTS = {
     "rules": _RULES_TEXT,
     "settings": _SETTINGS_TEXT,
-    "advanced settings": _ADVANCED_SETTINGS_TEXT,
+    "advanced_settings": _ADVANCED_SETTINGS_TEXT,
     "authors": _AUTHORS,
 }

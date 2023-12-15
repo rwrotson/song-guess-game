@@ -2,13 +2,13 @@ import asyncio
 from sys import exit
 
 from app.formatters import separate_line
-from app.game.state import GameState
+from app.state import GameState
 from app.settings.models import Settings
 
 
 async def game_loop():
     settings = Settings.load_from_file()
-    game_state = GameState()
+    game = GameState()
     viewer = get_viewer(settings)
     viewer.display(separate_line('Hello, welcome to THE GAME!'))
 

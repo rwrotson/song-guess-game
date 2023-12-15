@@ -1,6 +1,5 @@
 import random
 from abc import ABC, abstractmethod
-from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Iterable, Protocol
 
@@ -76,7 +75,6 @@ class NormalizedSongSelectionStrategy(SongSelectionStrategy):
         return selected_files
 
 
-@dataclass
 class RandomTimesStrategy(ABC):
     """
     Returns a list of random timestamps for sampling.
@@ -95,7 +93,13 @@ class RandomTimesStrategy(ABC):
 
     literal: str | None = None
 
-    def __post_init__(self):
+    def __init__(self, *, length: int, distance: int, times: int, from_: int = 0, to: int = 0):
+        self.length = length
+        self.distance = distance
+        self.times = times
+        self.from_ = from_
+
+        self.left_to_finish = to - from_ - length
         if self.left_to_finish > self.length:
             raise ValueError("Left to finish cannot be greater than length.")
 
