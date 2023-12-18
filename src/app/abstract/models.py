@@ -1,5 +1,4 @@
 from dataclasses import dataclass
-from typing import Any
 
 from pydantic import BaseModel
 from pydantic.fields import FieldInfo
@@ -28,22 +27,3 @@ class OrderedModel(BaseModel):
 
     def order_number_by_field_name(self, field_name: str, /) -> int:
         return list(self.model_fields).index(field_name)
-
-
-class FieldValidator:
-    """
-    Class that validates input for a field.
-    """
-    def __init__(self, model: BaseModel) -> None:
-        self._model = model
-
-    def validate_field(self, field_name: str, value: Any) -> None:
-        self._model.__pydantic_validator__.validate_assignment(
-            self._model.model_construct(),
-            field_name=field_name,
-            field_value=value,
-        )
-
-    def set_field(self, field_name: str, value: Any) -> None:
-        field = self._model.__annotations__[field_name]
-        setattr(self._model, field_name, field(value))

@@ -1,27 +1,10 @@
-from abc import ABC, abstractmethod
 from enum import auto
-from functools import cache
 
-from app.utils import EnumeratedStrEnum, split_camel_case_string, classproperty
-
-
-class MenuInfo(EnumeratedStrEnum, ABC):
-    @classproperty
-    @abstractmethod
-    def prompt(self) -> str:
-        pass
-    
-    @classmethod
-    @classproperty
-    @cache
-    def name(cls) -> str:
-        words = split_camel_case_string(cls.__name__)
-        if words[-1] == "Menu" and len(words) > 1:
-            words.pop()
-        return " ".join(words)
+from app.cli.templates import MenuTemplate
+from app.utils import classproperty
 
 
-class MainMenu(MenuInfo):
+class MainMenu(MenuTemplate):
     PLAY = auto()
     SETTINGS = auto()
     README = auto()
@@ -32,7 +15,7 @@ class MainMenu(MenuInfo):
         return "Select main menu section:"
 
 
-class SettingsMenu(MenuInfo):
+class SettingsMenu(MenuTemplate):
     MAIN_SETTINGS = auto()
     ADVANCED_SETTINGS = auto()
     SHOW_CURRENT_SETTINGS = auto()
@@ -44,7 +27,7 @@ class SettingsMenu(MenuInfo):
         return "Select settings menu section:"
 
 
-class MainSettingsMenu(MenuInfo):
+class MainSettingsMenu(MenuTemplate):
     GAME_SETTINGS = auto()
     PLAYER_SETTINGS = auto()
     BACK = auto()
@@ -54,7 +37,7 @@ class MainSettingsMenu(MenuInfo):
         return ":"
 
 
-class AdvancedSettingsMenu(MenuInfo):
+class AdvancedSettingsMenu(MenuTemplate):
     DISPLAY = auto()
     SELECTION = auto()
     SAMPLING = auto()
@@ -67,7 +50,7 @@ class AdvancedSettingsMenu(MenuInfo):
         return ":"
 
 
-class ReadmeMenu(MenuInfo):
+class ReadmeMenu(MenuTemplate):
     RULES = auto()
     SETTINGS = auto()
     ADVANCED_SETTINGS = auto()
@@ -79,7 +62,7 @@ class ReadmeMenu(MenuInfo):
         return "Enter the number of INFO you want to get:"
 
 
-class QuestionMenu(MenuInfo):
+class QuestionMenu(MenuTemplate):
     PLAY_SAMPLE = auto()
     GET_A_CLUE = auto()
     GIVE_ANSWER = auto()
@@ -87,15 +70,15 @@ class QuestionMenu(MenuInfo):
     @classproperty
     def prompt(self) -> str:
         return ":"
-    
-    
-class AnswerMenu(MenuInfo):
+
+
+class AnswerMenu(MenuTemplate):
     @classproperty
     def prompt(self) -> str:
         return ""
 
 
-class EvaluationMenu(MenuInfo):
+class EvaluationMenu(MenuTemplate):
     LISTEN_TO_EXTENDED_SAMPLE = auto()
     LISTEN_TO_ENTIRE_SONG = auto()
     EVALUATE_AS_CORRECT_ANSWER = auto()
@@ -108,7 +91,7 @@ class EvaluationMenu(MenuInfo):
         return ":"
 
 
-class AwaitMenu(MenuInfo):
+class AwaitMenu(MenuTemplate):
     @classproperty
     def prompt(self) -> str:
         return "Press ENTER to proceed further"

@@ -1,39 +1,68 @@
-from enum import StrEnum
+from enum import Enum
+from typing import Protocol
 
-from colorama import Style
-
-from app.utils import classproperty
+from app.formatters import TemplateString
 
 
-class ManglingTemplate(StrEnum):
+class InputMangler(Protocol):
+    """
+    Class that mangles user input.
+    """
+
+    @property
+    def steps_number(self) -> int:
+        ...
+
+    def mangle(self, input_text: str, /, **kwargs) -> str:
+        ...
+
+
+class ManglingTemplate(Enum, TemplateString):
     DELETE = ""
-    NO_MANGLING = "{input_}"
-    OPTIONS_MENU = "{bold}{option_name}{reset}: "
-    SETTINGS_SECTION = "{bold}{field_name}{reset}: {input_}"
-
-    @classproperty
-    def formatting_styles(self) -> dict[str, str]:
-        return {
-            'bold': Style.BRIGHT,
-            'reset': Style.RESET_ALL,
-        }
+    NO_MANGLING = "{input_text}"
+    OPTIONS_MENU = "{bold}{name}{reset_style}: "
+    SETTINGS_SECTION = "{bold}{name}{reset_style}: {input_text}"
 
 
-class InputMangler:
-    DELETE_LINE = "\033[F"
-    CARRIAGE_RETURN = "\r"
+def _mangle(text: str, /) -> str:
+    _DELETE_LINE_CHAR = "\033[F"
+    _CARRIAGE_RETURN_CHAR = "\r"
 
+    def delete_n_lines_sequence(lines_number: int, /) -> str:
+        return _DELETE_LINE_CHAR * lines_number
+
+    return delete_n_lines_sequence(2) + text + _CARRIAGE_RETURN_CHAR
+
+
+class OneStepMangler:
     def __init__(self, *, template: ManglingTemplate) -> None:
         self._template = template
 
-    def mangle(self, input_: str, /, **kwargs) -> str:
-        mangled_input = self._template.format(
-            input_=input_,
-            **kwargs,
-            **self._template.formatting_styles,
-        )
-        return self.delete_n_lines_sequence(2) + mangled_input + self.CARRIAGE_RETURN
+    @property
+    def steps_number(self) -> int:
+        return 1
 
-    @classmethod
-    def delete_n_lines_sequence(cls, lines_number: int, /) -> str:
-        return cls.DELETE_LINE * lines_number
+    def mangle(self, input_text: str, /, **kwargs) -> str:
+        return _mangle(
+            self._template.format(
+                input_text,
+                **kwargs,
+            )
+        )
+
+
+class MultiStepMangler:
+    def __init__(self, *templates: ManglingTemplate) -> None:
+        self._templates = templates
+
+    @property
+    def steps_number(self) -> int:
+        return len(self._templates)
+
+    def mangle(self, input_text: str, /, *, step_number: int, **kwargs) -> str:
+        return _mangle(
+            self._templates[step_number].format(
+                input_text,
+                **kwargs,
+            )
+        )

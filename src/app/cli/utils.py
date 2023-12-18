@@ -5,8 +5,8 @@ class StepCounter:
 
     __slots__ = ("_current_step", "_steps_number")
 
-    def __init__(self, steps_number: int):
-        self._current_step = 0
+    def __init__(self, steps_number: int, *, current_step: int = 0) -> None:
+        self._current_step = current_step
         self._steps_number = steps_number
 
     @property

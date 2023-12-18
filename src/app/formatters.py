@@ -1,7 +1,7 @@
 import time
 from enum import auto
 from random import randrange
-from typing import Protocol
+from typing import override
 
 from colorama import init, Fore, Style
 
@@ -11,8 +11,31 @@ from app.utils import EnumeratedStrEnum, get_singleton_instance
 init(autoreset=True)
 
 
-class Formatter(Protocol):
-    ...
+_STYLE_FORMATTERS = {
+    "bold": Style.BRIGHT,
+    "dim": Style.DIM,
+    "normal": Style.NORMAL,
+    "reset_style": Style.RESET_ALL,
+}
+
+_COLOR_FORMATTERS = {
+    "red": Fore.RED,
+    "green": Fore.GREEN,
+    "yellow": Fore.YELLOW,
+    "blue": Fore.BLUE,
+    "magenta": Fore.MAGENTA,
+    "cyan": Fore.CYAN,
+    "white": Fore.WHITE,
+    "reset_color": Fore.RESET,
+}
+
+FORMATTERS = {**_STYLE_FORMATTERS, **_COLOR_FORMATTERS}
+
+
+class TemplateString(str):
+    @override
+    def format(self, *args, **kwargs) -> str:
+        return super().format(*args, **FORMATTERS, **kwargs)
 
 
 def bold(text: str, /) -> str:
@@ -57,6 +80,28 @@ class _ColorGenerator:
 
 def _get_color_generator() -> _ColorGenerator:
     return get_singleton_instance(_ColorGenerator)
+
+
+class ColorFormatter:
+    @staticmethod
+    def colored_fore(text: str, /, *, color: ForeColor) -> str:
+        if color == ForeColor.WHITE:
+            return text
+
+        return _COLOR_FORMATTERS[color] + text + _COLOR_FORMATTERS["reset_color"]
+
+    @classmethod
+    def red(self, text: str, /) -> str:
+        return self.colored_fore(text, color=ForeColor.RED)
+
+    def green(self, text: str, /) -> str:
+        return self.colored_fore(text, color=ForeColor.GREEN)
+
+    def blue(self, text: str, /) -> str:
+        return self.colored_fore(text, color=ForeColor.BLUE)
+
+    def magenta(self, text: str, /) -> str:
+        return self.colored_fore(text, color=ForeColor.MAGENTA)
 
 
 def colored_fore(text: str, /, *, color: ForeColor) -> str:

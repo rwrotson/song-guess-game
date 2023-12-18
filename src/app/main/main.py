@@ -2,31 +2,27 @@ import asyncio
 from sys import exit
 
 from app.formatters import separate_line
-from app.state import GameState
-from app.settings.models import Settings
+from app.main.presenters import presenter_factory
+from app.main.state import get_state
 
 
 async def game_loop():
-    settings = Settings.load_from_file()
-    game = GameState()
-    viewer = get_viewer(settings)
+    state = get_state()
+    viewer = state.viewers.default_viewer
     viewer.display(separate_line('Hello, welcome to THE GAME!'))
 
     while True:
-        model = get_model(game_state)
+        presenter = presenter_factory(state)
 
-        presenter = Presenter(model, viewer)
-
-        presenter.show()
-        presenter.get_input()
+        presenter.prepare()
 
         try:
             presenter.validate()
-        except Exception:
+        except IncorrectInputError as e:
             viewer.display(separate_line('Invalid input. Please try again.'))
             continue
-
-        presenter.update()
+        else:
+            presenter.process()
 
 
 def main():

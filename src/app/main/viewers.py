@@ -1,6 +1,16 @@
-from app.abstract.viewers import Viewer
+from typing import Protocol
+
 from app.formatters import bold, separate_line, colored_fore, imitate_typing, ForeColor
 from app.settings.models import DisplaySettings
+
+
+class Viewer(Protocol):
+    """
+    Class that displays text to the user.
+    """
+
+    def display(self, text: str, /, *, is_bold: bool = False, is_sep_line: bool = True) -> None:
+        ...
 
 
 def _format_text(text: str, /, is_bold: bool = False, is_sep_line: bool = True) -> str:
@@ -43,7 +53,7 @@ class TypingEnabledViewer:
         )
 
 
-def viewer_factory(display_settings: DisplaySettings, *, color: ForeColor.WHITE) -> Viewer:
+def viewer_factory(display_settings: DisplaySettings, *, color: ForeColor.WHITE) -> AbstractViewer:
     is_typing_enabled = display_settings.typing_enabled
 
     typing_mapping = {

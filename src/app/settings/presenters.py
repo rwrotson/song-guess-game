@@ -3,7 +3,7 @@ from typing import override
 from app.formatters import bold
 from app.abstract.models import BaseModel, FieldData
 from app.abstract.views import Viewer
-from app.validators import TextInputValidator
+from app.main.validators import TextInputValidator
 
 
 class SettingsSectionPresenter:

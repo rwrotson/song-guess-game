@@ -1,25 +1,77 @@
+from dataclasses import dataclass
+from functools import cached_property
+from typing import Any, ClassVar, Self
+
 from pydantic import BaseModel
 
-from app.abstract.menus import Menu
-from app.cli.core import structs
-from app.cli.menus import HomogenicMenu, HeterogenicMenu
+from app.cli.exceptions import WrongMenuTypeError
+from app.cli.menus import Menu, HomogenicMenu, HeterogenicMenu, MenuType
 from app.cli.mods.manglers import InputMangler, ManglingTemplate
-from app.cli.core.models import MenuModel, MenuStepType, MenuType
-from app.cli.mods.representers import TextInputRepresenter, OptionsRepresenter, MenuRepresenter
-from app.cli.mods.receivers import InputReceiver
+from app.cli.mods.models import MenuStepType, MenuStep
+from app.cli.mods.representers import Representer
+from app.cli.mods.validators import Validator
+from app.cli.templates import MenuTemplate
 
 
-def model_factory(menu_info: type[structs.MenuInfo] | BaseModel) -> MenuModel:
-    if isinstance(menu_info, BaseModel):
-        return MenuModel.from_model(menu_info)
-    return MenuModel.from_menu_info(menu_info)
+_MenuOrigin = BaseModel | type[MenuTemplate] | list[type[MenuTemplate]]
 
 
-def parse_menu_step_type(step_type: MenuStepType) -> tuple[MenuRepresenter, InputReceiver, InputMangler]:
-    mapping = {
+@dataclass(slots=True, frozen=True)
+class _ParsedModel:
+    """
+    Class for parsing menu template into menu model blueprint.
+    """
+    name: str | None
+    steps: list[MenuStep]
+    model: BaseModel | None = None
+
+    @cached_property
+    def menu_type(self) -> MenuType:
+        return MenuType.from_step_types(*self.steps)
+
+    @classmethod
+    def from_menu_infos(cls, *menu_infos: type[MenuTemplate], name: str | None = None) -> Self:
+        steps = [MenuStep.from_menu_info(menu_info) for menu_info in menu_infos]
+        return cls(name=name, steps=steps)
+
+    @classmethod
+    def from_pydantic_model(cls, model: BaseModel, *, name: str | None = None) -> Self:
+        name = name or model.__class__.__name__
+        fields = model.model_fields
+        steps = [MenuStep.from_model_field(model, f_name) for f_name in fields]
+        return cls(name=name, steps=steps, model=model)
+
+    @classmethod
+    def from_any_origin(cls, menu_origin: _MenuOrigin) -> Self:
+        match menu_origin:
+            case BaseModel():
+                return _ParsedModel.from_pydantic_model(menu_origin)
+            case type(MenuTemplate()):
+                return _ParsedModel.from_menu_infos(menu_origin)
+            case list(type(MenuTemplate())):
+                return _ParsedModel.from_menu_infos(*menu_origin)
+            case _:
+                raise TypeError("Unsupported type for menu_origin")
+
+
+@dataclass(slots=True, frozen=True)
+class _ParsedStepMods:
+    """
+    Class for parsing menu step type into step modifiers.
+    """
+
+    representer: Representer
+    validator: Validator
+    mangler: InputMangler
+
+    MAPPING: ClassVar[dict[MenuStepType, dict[str, Any]]] = {
         MenuStepType.OPTIONS: {
-            "representer": OptionsRepresenter,
+            "representer": {
+                "prompt_template": "",
+                "options_template": "",
+            },
             "mangling_template": ManglingTemplate.OPTIONS_MENU,
+            "validator": "",
         },
         MenuStepType.TEXT_INPUT: {
             "representer": TextInputRepresenter,
@@ -27,64 +79,62 @@ def parse_menu_step_type(step_type: MenuStepType) -> tuple[MenuRepresenter, Inpu
         },
     }
 
-    representer = mapping[step_type]["representer"]
-    mangling_template = mapping[step_type]["mangling_template"]
-    input_mangler = InputMangler(template=mangling_template)
-    input_receiver = InputReceiver()
+    @classmethod
+    def from_step_type(cls, step_type: MenuStepType, /) -> Self:
+        return cls(
+            representer=cls.MAPPING[step_type]["representer"],
+            validator=,
+            mangler=InputMangler(
+                template=cls.MAPPING[step_type]["mangling_template"],
+            ),
+        )
 
-    return representer, input_receiver, input_mangler
+    @classmethod
+    def from_menu_step(cls, menu_step: MenuStep, /) -> Self:
+        return cls.from_step_type(menu_step.step_type)
 
 
-def homogenic_menu_factory(menu_info: type[structs.MenuInfo] | BaseModel) -> HomogenicMenu:
-    model = model_factory(menu_info)
-    menu_type = model.menu_type
+def homogenic_menu_factory(menu_origin: _MenuOrigin, /, *, parsed_model: _ParsedModel = None) -> HomogenicMenu:
+    if not parsed_model:
+        parsed_model = _ParsedModel.from_any_origin(menu_origin)
 
-    if menu_type == MenuType.MIXED:
-        raise ValueError("Menu model type must be HOMOGENIC.")
+    if parsed_model.menu_type == MenuType.MIXED:
+        raise WrongMenuTypeError("Menu model type must be HOMOGENIC.")
 
-    menu_type_to_step_type = {
-        MenuType.OPTIONS: MenuStepType.OPTIONS,
-        MenuType.TEXT_INPUT: MenuStepType.TEXT_INPUT,
-    }
-    step_type = menu_type_to_step_type[menu_type]
-    representer, input_receiver, input_mangler = parse_menu_step_type(step_type)
+    parsed_mods = _ParsedStepMods.from_menu_step(parsed_model.steps[0])
 
     return HomogenicMenu(
-        model=model,
-        representer=representer,
-        receiver=input_receiver,
-        mangler=input_mangler,
+        name=parsed_model.name,
+        steps=parsed_model.steps,
+        representers=parsed_mods.representer,
+        receivers=parsed_mods.receiver,
+        manglers=parsed_mods.mangler,
     )
 
 
-def heterogenic_menu_factory(menu_info: type[structs.MenuInfo] | BaseModel) -> HeterogenicMenu:
-    model = model_factory(menu_info)
-    menu_type = model.menu_type
+def heterogenic_menu_factory(menu_origin: _MenuOrigin, /, *, parsed_model: _ParsedModel = None) -> HeterogenicMenu:
+    if not parsed_model:
+        parsed_model = _ParsedModel.from_any_origin(menu_origin)
 
-    if menu_type != MenuType.MIXED:
-        raise ValueError("Menu model type must be HETEROGENIC.")
+    if parsed_model.menu_type != MenuType.MIXED:
+        raise WrongMenuTypeError("Menu model type must be HETEROGENIC.")
 
-    representers = []
-    receivers = []
-    manglers = []
-    for step in model.steps:
-        step_type = step.step_type
-        representer, input_receiver, input_mangler = parse_menu_step_type(step_type)
-
-        representers.append(representer)
-        receivers.append(input_receiver)
-        manglers.append(input_mangler)
+    mods = [_ParsedStepMods.from_menu_step(step) for step in parsed_model.steps]
+    representers, receivers, manglers = zip(*mods)
 
     return HeterogenicMenu(
-        model=model,
-        representer=representers,
-        receiver=receivers,
-        mangler=manglers,
+        name=parsed_model.name,
+        steps=parsed_model.steps,
+        representers=representers,
+        receivers=receivers,
+        manglers=manglers,
     )
 
 
-def menu_factory(menu_info: type[structs.MenuInfo] | BaseModel) -> Menu:
-    model = model_factory(menu_info)
-    if model.menu_type == MenuType.MIXED:
-        return heterogenic_menu_factory(menu_info)
-    return homogenic_menu_factory(menu_info)
+def menu_factory(menu_origin: _MenuOrigin, /) -> Menu:
+    parsed_model = _ParsedModel.from_any_origin(menu_origin)
+
+    if parsed_model.menu_type == MenuType.MIXED:
+        return heterogenic_menu_factory(menu_origin, parsed_model=parsed_model)
+
+    return homogenic_menu_factory(menu_origin, parsed_model=parsed_model)

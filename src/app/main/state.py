@@ -1,8 +1,8 @@
 from enum import Enum, StrEnum, auto
 
 from app.game.models import Game
-from app.settings.models import Settings, DisplaySettings
-from app.viewers import ViewersContainer
+from app.settings.models import Settings
+from app.main.viewers import Viewer, ViewersContainer
 from app.utils import get_singleton_instance
 
 
@@ -12,9 +12,20 @@ class Stage(Enum):
         SETTINGS = auto()
         README = auto()
 
-    class SETTINGS(StrEnum):
+    class SETTINGS_SECTIONS(StrEnum):
         MAIN_SETTINGS = auto()
         ADVANCED_SETTINGS = auto()
+
+    class MAIN_SETTINGS(StrEnum):
+        GAME_SETTINGS = auto()
+        PLAYER_SETTINGS = auto()
+
+    class ADVANCED_SETTINGS(StrEnum):
+        DISPLAY = auto()
+        SELECTION = auto()
+        SAMPLING = auto()
+        PLAYBACK_BAR = auto()
+        EVALUATION = auto()
 
     class GAME(StrEnum):
         QUESTION = auto()
@@ -24,16 +35,20 @@ class Stage(Enum):
 
 
 class State:
-    __slots__ = ("stage", "settings", "viewers", "game")
+    __slots__ = ("stage", "settings", "game", "_viewers")
 
     def __init__(self):
         self.stage = Stage.MAIN.MAIN_MENU
         self.settings: Settings = Settings.load_from_file()
-        self.viewers = ViewersContainer(
+        self.game: Game | None = None
+        self._viewers = ViewersContainer(
             display_settings=self.settings.display,
             players_number=self.settings.players_number,
         )
-        self.game: Game | None = None
+
+    @property
+    def viewers(self) -> ViewersContainer:
+        return self._viewers
 
     def restart_game(self) -> None:
         self.stage = Stage.GAME.QUESTION

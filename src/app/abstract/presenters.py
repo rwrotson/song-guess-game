@@ -2,32 +2,10 @@ from typing import Protocol
 
 from pydantic import BaseModel
 
-from app.abstract.viewers import Viewer
+from app.abstract.viewers import AbstractViewer
 
 
-class Presenter(Protocol):
-    """
-    Abstract class that represents the logic of menu navigation.
-    Basically it is constructed from a pydantic model, which gives data to represent,
-    and a viewer, which displays this data as a menu.
 
-    When run, it displays the menu, receives user input, validates it, and returns the result.
-
-    Roughly implemented as Presenter component of the MVP pattern.
-    """
-
-    def __init__(
-        self,
-        *,
-        menu,
-        validator,
-        processor,
-        viewer: Viewer,
-    ) -> None:
-        ...
-
-    def run(self) -> None:
-        ...
 
 
 class MenuPresenter:

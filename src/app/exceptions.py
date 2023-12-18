@@ -24,10 +24,3 @@ class InvalidGameFileError(SongRouletteError):
     Exception raised when a game file is invalid.
     """
     pass
-
-
-class InvalidInputError(SongRouletteError):
-    """
-    Exception raised when an input is invalid.
-    """
-    pass
