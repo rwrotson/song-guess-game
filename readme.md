@@ -1,13 +1,17 @@
-# Description
+# songs-roulette
 
-This is a simple game for playing with friends. The game is about guessing songs by their short samples. The game is played in rounds, where each player tries to guess a song from their music library by its short sample. The game supports multiple players and multiple rounds. The game is played in the terminal, where the players can see the progress of the game, the playback bar, the current sample, the current song, the current player, the current score, and the current round. The game also supports clues, which allow the player to listen to another random fragment of the same song. The game also supports multiple audio formats, such as `mp3`, `flac`, and `wav`. The game also supports multiple operating systems, such as `Windows`, `MacOS`, and `Linux`. The game also supports multiple languages, such as `English`, `Russian`, and `Ukrainian`. The game also supports multiple color themes, such as `light`, `dark`, and `custom`. The game also supports multiple settings, such as `players_number`, `sample_duration`, `infinite_repeats`, `repeats_number`, `clues_number`, `clues_strategy`, `rounds_number`, `name`, `path`, `color_enabled`, `typing_enabled`, `min_delay`, `max_delay`, `strategy`, `from_`, `to_finish`, `distance`, `clues_quantity`, `strategy`, `empty_char`, `full_char`, `space_char`, `bar_lenght`, `update_frequency`, `enable_flashing`, `enable_question_mark`, `enable_clue_marks`, `full_answer`, `half_answer`, `no_answer`, `wrong_answer`, `clue_discount`, `config_path`, `game_pickle_path`, `history_log_path`. The game also supports multiple features, such as `typing`, `color`, `clues`, `repeats`, `rounds`, `samples`, `audio`, `settings`, `history`, `help`, `menu`, `exit`, `start`, `stop`, `pause`, `resume`, `save`, `load`, `reset`, `configure`, `select`, `play`, `guess`, `score`, `progress`, `bar`, `time`, `song`, `player`, `round`, `library`, `sample`, `clue`, `repeats`, `settings`, `history`, `help`, `menu`, `exit`, `start`, `stop
+A terminal game to play with friends, lovers and music geeks! Who knows own music library better?
+Do you really can tell the difference between "Hey Jude" and "Strawberry Fields Forever" by 1-sec sample? 
+Between "And I Love Her" and "PS I Love You"?
+Then how about 0.5 seconds? 
+Need a clue?..
+Roll the roulette!
 
-`song-roulette` is terminal game to play with friends who are also music geeks. 
-Try to guess the random songs from your music libraries.
+Try to guess random songs from your music library. You can repeat question sample or listen .
+Broadly configurable game params: random algorithms, rules, mechanics and appearance in the terminal. 
 
-
+All you need to start game is a directory with music files inside for every player.
 Game supports `mp3-`, `flac-` and `wav-`files as sources of audio.
-
 
 # Install
 
@@ -40,9 +44,19 @@ After install, run the game by executing:
 ```
 poetry run start
 ```
-Then you will see main menu, where you can configure the game, see current configuration or start the game. Before launching the game, configure it via built-in questionnaire: specify game settings, players number, players' names and paths to music libraries.
+Then you will see main menu, where you can configure the game, see current configuration and libraries and eventually start the game.
 
-We recommend to start your first game with ```sample duration = 1.0```.
+![Screenshot of a main menu screen.](/readme/main-menu.png)
+
+Before launching the game, configure it via built-in questionnaire: specify game settings, players number, players' names and paths to music libraries.
+
+![Screenshot of a settings navigation screen.](/readme/all-settings.png)
+![Screenshot of a game settings screen.](/readme/game-settings.png)
+![Screenshot of a player's settings screen.](/readme/player-settings.png)
+
+Your imputs will be validated and saved. 
+
+We recommend to start your first game with ```sample duration = 1.0```, then adjust it too your taste.
 
 # Rules
 

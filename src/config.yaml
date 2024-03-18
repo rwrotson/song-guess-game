@@ -1,11 +1,11 @@
 game:
   players_number: 2
-  sample_duration: 1.0
+  sample_duration: 0.9
   infinite_repeats: false
   repeats_number: 5
-  clues_number: 10
-  clues_strategy: new_next
-  rounds_number: 10
+  clues_number: 12
+  clues_strategy: random_next
+  rounds_number: 5
 players:
 - name: rwrotson
   path: /Users/igorlashkov/Downloads/rh
