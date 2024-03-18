@@ -1,11 +1,11 @@
 # songs-roulette
 
-A terminal game to play with friends, lovers and music geeks! Who knows own music library better?
+*A terminal game to play with friends, lovers and music geeks! Who knows own music library better?
 Do you really can tell the difference between "Hey Jude" and "Strawberry Fields Forever" by 1-sec sample? 
 Between "And I Love Her" and "PS I Love You"?
 Then how about 0.5 seconds? 
 Need a clue?..
-Roll the roulette!
+Roll the roulette!*
 
 Try to guess random songs from your music library. You can repeat question sample or listen .
 Broadly configurable game params: random algorithms, rules, mechanics and appearance in the terminal. 
@@ -56,6 +56,8 @@ Before launching the game, configure it via built-in questionnaire: specify game
 
 Your imputs will be validated and saved. 
 
+You can check 
+
 We recommend to start your first game with ```sample duration = 1.0```, then adjust it too your taste.
 
 # Rules
@@ -70,9 +72,15 @@ For more detailed rules and help visit help menu within app.
 
 # Customization
 
+You can further customize game conditions with Advanced Settings section.
 
+![Screenshot of an advanced settings screen.](/readme/advanced-settings.png)
 
-# Settings
+It may be tedious to edit a lot of settings with internal questionnaires. In such cases you can edit config file directly in your terminal's text editor. Also note that if you've gone too far, you can always reset everything to default.
+
+You can explore customization options in the reference right below.
+
+# Settings Reference
 
 ### MAIN_SETTINGS:
 - **players_number** : number of players in the game (*>=1*, default: **2**)
