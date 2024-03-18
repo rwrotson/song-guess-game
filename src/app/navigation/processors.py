@@ -5,7 +5,7 @@ from pydantic import ValidationError
 from app.cli.formatters import TemplateString
 from app.cli.mods.processors import Input
 from app.game.models import Player
-from app.main.state import Stage, get_state
+from app.state import Stage, get_state
 
 
 class MainMenuProcessor:

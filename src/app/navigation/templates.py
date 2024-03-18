@@ -1,7 +1,7 @@
 import os
 
 from app.cli.models import MenuStep
-from app.main.state import get_state
+from app.state import get_state
 
 
 def make_main_menu_step():

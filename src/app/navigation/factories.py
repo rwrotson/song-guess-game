@@ -2,8 +2,8 @@ from app.cli.models import Menu
 from app.cli.mods import manglers, representers, validators
 from app.cli.factories import ParsedModel
 from app.game.factories import game_menu_factory
-from app.main import templates, processors
-from app.main.state import State, Stage
+from app.navigation import templates, processors
+from app.state import State, Stage
 from app.readme.factories import readme_menu_factory
 from app.settings.factories import settings_menu_factory
 

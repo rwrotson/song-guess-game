@@ -21,3 +21,9 @@ class SettingsFileNotFoundError(SongRouletteError):
     """
     pass
 
+
+class SettingsSectionNotFoundError(SongRouletteError):
+    """
+    Exception raised when settings section is not found.
+    """
+    pass

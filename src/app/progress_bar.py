@@ -3,7 +3,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import Iterator
 
-from app.formatters import blue, magenta, red
+from app.cli.colors import Color
 from app.settings.models import PlaybackBarSettings
 
 import cursor
@@ -75,14 +75,29 @@ class BarDisplay:
     Time in ms.
     """
 
-    __slots__ = ("_config", "_qmark_bar_n", "_cmark_bar_ns", "current_bar_n", "_bar", "_prev_bar")
+    __slots__ = (
+        "_config",
+        "_qmark_bar_n",
+        "_cmark_bar_ns",
+        "current_bar_n",
+        "_bar",
+        "_prev_bar",
+    )
 
     def __init__(self, *, params: PlaybackParams, config: PlaybackBarSettings) -> None:
         self._config = config
 
         bar_length_in_ms = params.song_length // config.bar_length
-        self._qmark_bar_n = params.question_mark // bar_length_in_ms + 1 if config.enable_question_mark else None
-        self._cmark_bar_ns = [m // bar_length_in_ms + 1 for m in params.clue_marks] if config.enable_clue_marks else []
+        self._qmark_bar_n = (
+            params.question_mark // bar_length_in_ms + 1
+            if config.enable_question_mark
+            else None
+        )
+        self._cmark_bar_ns = (
+            [m // bar_length_in_ms + 1 for m in params.clue_marks]
+            if config.enable_clue_marks
+            else []
+        )
 
         current_bar_n = params.start_time // bar_length_in_ms + 1
         self.current_bar_n = 1
@@ -98,12 +113,14 @@ class BarDisplay:
         self.current_bar_n += 1
         self._prev_bar = self._bar
 
-        if (self.current_bar_n == self._qmark_bar_n) and (self.current_bar_n in self._cmark_bar_ns):
-            self._bar += magenta(self._config.full_char)
+        if (self.current_bar_n == self._qmark_bar_n) and (
+            self.current_bar_n in self._cmark_bar_ns
+        ):
+            self._bar += Color.M.wrap_text(self._config.full_char)
         elif self.current_bar_n == self._qmark_bar_n:
-            self._bar += red(self._config.full_char)
+            self._bar += Color.R.wrap_text(self._config.full_char)
         elif self.current_bar_n in self._cmark_bar_ns:
-            self._bar += blue(self._config.full_char)
+            self._bar += Color.B.wrap_text(self._config.full_char)
         else:
             self._bar += self._config.full_char
 

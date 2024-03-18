@@ -1,7 +1,7 @@
 from app.exceptions import SongRouletteError
 
 
-class WrongMenuTypeError(SongRouletteError):
+class IncorrectMenuConfigurationError(SongRouletteError):
     """
     Raised when wrong menu type is passed to the factory, function or method.
     """

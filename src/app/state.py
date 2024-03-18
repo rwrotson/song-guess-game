@@ -92,7 +92,7 @@ class State:
     def exit_game(self) -> None:
         import sys
 
-        self.game.pickle()
+        # self.game.pickle()
 
         self.viewer.display("Bye! See you soon!")
 

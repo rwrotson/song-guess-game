@@ -1,89 +1,87 @@
 from dataclasses import dataclass
 from enum import Enum
-from typing import Protocol
+from functools import cached_property
+from typing import TYPE_CHECKING
 
-from app.cli.mods.models import MenuStep
-from app.formatters import TemplateString
+from app.cli.formatters import TemplateString
 
-
-class Representer(Protocol):
-    def represent(self, step_model: MenuStep, /, **kwargs) -> str:
-        ...
-
-    @property
-    def steps_number(self) -> int:
-        ...
+if TYPE_CHECKING:
+    from app.cli.models import MenuStep
 
 
-class PromptTemplate(Enum, TemplateString):
+class PromptTemplate(TemplateString, Enum):
     NO_PROMPT = ""
-    ONLY_PROMPT = "{prompt}"
-    BOLD_PROMPT = "{bold}{prompt}{reset_style}"
-    PROMPT_WITH_NAME = "{bold}{name}{reset_style}: {prompt}"
+    ONLY_PROMPT = "${prompt}"
+    BOLD_PROMPT = "${b}${prompt}${r}"
+    PROMPT_WITH_NAME = "${clr_current}${b}${name}${r}: ${prompt}"
 
 
-class OptionsTemplate(Enum, TemplateString):
+class DefaultTemplate(TemplateString, Enum):
+    NO_DEFAULT = ""
+    DEFAULT = "${b}(${r}default: ${b}${default})${r}"
+
+
+class OptionsTemplate(TemplateString, Enum):
     NO_OPTIONS = ""
-    WITH_NUMBER = "{number}. {bold}{option_name}{reset_style}"
-    WITH_NUMBER_AND_TAB = "\t{number}. {bold}{name}{reset_style}"
+    WITH_NUMBER = "${number}. ${b}${option_name}${r}"
+    WITH_NUMBER_AND_TAB = "\t${number}. ${b}${option_name}${r}"
 
 
 @dataclass(slots=True, frozen=True)
 class RepresenterTemplate:
     prompt_template: PromptTemplate
     options_template: OptionsTemplate
+    default_template: DefaultTemplate = DefaultTemplate.NO_DEFAULT
 
 
-def _represent(
-    prompt_template: PromptTemplate,
-    options_template: OptionsTemplate,
-    menu_step: MenuStep,
-) -> str:
-    prompt = prompt_template.format(
-        prompt=menu_step.prompt,
-        name=menu_step.name,
-    )
-    options = [
-        options_template.format(
-            number=i + 1,
-            name=option_name,
-        )
-        for i, option_name in enumerate(menu_step.options)
-    ]
-    options = "\n".join(options)
+class Representer:
+    def __init__(self, *templates: RepresenterTemplate) -> None:
+        self._representer_templates = templates
 
-    return prompt + "\n" + options
-
-
-class OneStepRepresenter:
-    def __init__(self, representer_template: RepresenterTemplate) -> None:
-        self._prompt_template = representer_template.prompt_template
-        self._options_template = representer_template.options_template
-
-    @property
-    def steps_number(self) -> int:
-        return 1
-
-    def represent(self, menu_step: MenuStep) -> str:
-        return _represent(
-            prompt_template=self._prompt_template,
-            options_template=self._options_template,
-            menu_step=menu_step,
-        )
-
-
-class MultiStepRepresenter:
-    def __init__(self, *representer_templates: RepresenterTemplate) -> None:
-        self._representer_templates = representer_templates
-
-    @property
+    @cached_property
     def steps_number(self) -> int:
         return len(self._representer_templates)
 
-    def represent(self, step_model: MenuStep, *, step_number: int) -> str:
-        representer_template = self._representer_templates[step_number]
-        return _represent(
-            prompt_template=representer_template.prompt_template,
-            options_template=representer_template.options_template,
-            menu_step=step_model,
+    def template(self, step_number: int) -> RepresenterTemplate:
+        if self.steps_number == 1:
+            return self._representer_templates[0]
+        return self._representer_templates[step_number]
+
+    def represent(
+        self, step_model: "MenuStep", /, *, step_number: int = 0
+    ) -> TemplateString:
+        template = self.template(step_number=step_number)
+        prompt_template, options_template, default_template = (
+            template.prompt_template,
+            template.options_template,
+            template.default_template,
         )
+
+        prompt = TemplateString("")
+        if step_model.prompt is not None:
+            prompt += prompt_template.safe_substitute(
+                prompt=step_model.prompt,
+                name=step_model.name,
+            )
+        if step_model.default is not None:
+            prompt += " " + default_template.safe_substitute(
+                default=step_model.default,
+            )
+        if step_model.options:
+            if step_model.prompt is not None:
+                prompt += "\n"
+            prompt += "\n".join(
+                [
+                    str(
+                        options_template.safe_substitute(
+                            number=i + 1, option_name=option_name
+                        )
+                    )
+                    for i, option_name in enumerate(step_model.options)
+                ]
+            )
+            prompt += "\n"
+
+        prompt += "\n"
+
+        return prompt

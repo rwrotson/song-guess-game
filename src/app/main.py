@@ -1,8 +1,8 @@
 from sys import exit
 
 from app.cli.exceptions import InvalidInputError
-from app.main.factories import menu_factory
-from app.main.state import get_state, Stage
+from app.navigation.factories import menu_factory
+from app.state import get_state, Stage
 
 
 def game_loop():

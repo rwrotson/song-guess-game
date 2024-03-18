@@ -1,26 +1,45 @@
 game:
-  clues_number: 10
-  clues_strategy: new_next
+  players_number: 2
+  sample_duration: 1.0
   infinite_repeats: false
   repeats_number: 5
+  clues_number: 10
+  clues_strategy: new_next
   rounds_number: 10
-  sample_duration: 1.0
 players:
-- name: fake
-  path: /
-sampling:
-  from_: 2.0
-  strategy: normalized
-  to_finish: 3
+- name: rwrotson
+  path: /Users/igorlashkov/Downloads/rh
+- name: krutoi_official
+  path: /Users/igorlashkov/Downloads/MGMT2024
+display:
+  color_enabled: true
+  typing_enabled: true
+  min_delay: 0.0001
+  max_delay: 0.005
 selection:
   strategy: naive
-typing:
-  enabled: true
-  max_delay: 0.1
-  min_delay: 0.01
+sampling:
+  from_: 2.0
+  to_finish: 3.0
+  distance: 5.0
+  clues_quantity: 3
+  strategy: normalized
+playback_bar:
+  empty_char: ░
+  full_char: █
+  space_char: ' '
+  bar_length: 50
+  update_frequency: 0.5
+  enable_flashing: false
+  enable_question_mark: true
+  enable_clue_marks: true
 evaluation:
-  clue_discont: 0.1
   full_answer: 1.0
   half_answer: 0.5
   no_answer: 0.0
   wrong_answer: 0.0
+  clue_discount: 0.1
+service_paths:
+  config_path: src/config.yaml
+  game_pickle_path: src/game.pickle
+  history_log_path: src/history.log

@@ -1,22 +1,25 @@
 import os
 import subprocess
 import yaml
-from pathlib import Path
-from typing import Any, Self, TypeAlias
+from typing import Self
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import Field, field_validator, ValidationError
 from pydantic_settings import BaseSettings
 
-from app.abstract.models import OrderedModel
-from app.consts import CONFIG_FILE_PATH
+from app.models import OrderedModel
+from app.consts import CONFIG_FILE_PATH, HISTORY_FILE_PATH, PICKLE_FILE_PATH
+from app.files import get_audiofiles_paths
 from app.utils import get_singleton_instance
 
 
-class SettingsSection(BaseModel, OrderedModel):
+class SettingsSection(OrderedModel):
     """
     Base class for all settings sections.
     """
-    pass
+
+    @property
+    def fields_number(self) -> int:
+        return len(self.model_fields)
 
 
 class GameSettings(SettingsSection):
@@ -24,8 +27,13 @@ class GameSettings(SettingsSection):
     Main game settings section defining specifications of rules.
     """
 
+    players_number: int = Field(
+        ge=1,
+        default=2,
+        description="Enter the number of players in the game.",
+    )
     sample_duration: float = Field(
-        gt=0.05,
+        gt=0.1,
         default=1.0,
         description="Enter the duration of the sample in seconds.",
     )
@@ -63,7 +71,7 @@ class PlayerSettings(SettingsSection):
     name: str = Field(
         min_length=1,
         max_length=20,
-        default="",
+        default="default",
         description="Enter the name of the player.",
     )
     path: str = Field(
@@ -71,16 +79,24 @@ class PlayerSettings(SettingsSection):
         description="Enter the path to the folder with player's audiofiles.",
     )
 
+    @field_validator("path")
     @classmethod
-    @field_validator('path')
-    def check_if_path_exists(cls, path: str):
-        assert os.path.exists(path), 'Sorry, there is no such folder.'
+    def check_if_path_exists(cls, path: str) -> str:
+        if not path:
+            return path
+
+        if not os.path.exists(path):
+            raise ValueError("Sorry, there is no such folder.")
         return path
 
+    @field_validator("path")
     @classmethod
-    @field_validator('players_folders')
-    def check_if_there_are_audiofiles(cls, path):
-        assert len(get_all_audiofiles(path)) != 0, 'Sorry, there are no supported audiofiles in this folder.'
+    def check_if_there_are_audiofiles(cls, path: str) -> str:
+        if not path:
+            return path
+
+        if len(get_audiofiles_paths(path)) == 0:
+            raise ValueError("Sorry, there are no supported audiofiles in this folder.")
         return path
 
 
@@ -99,12 +115,14 @@ class DisplaySettings(SettingsSection):
     )
     min_delay: float = Field(
         gt=0.0,
-        default=0.01,
+        lt=0.5,
+        default=0.001,
         description="Enter minimal number of seconds between two characters.",
     )
     max_delay: float = Field(
         gt=0.0,
-        default=0.1,
+        lt=0.5,
+        default=0.05,
         description="Enter maximum number of seconds between two characters.",
     )
 
@@ -115,7 +133,7 @@ class SelectionSettings(SettingsSection):
     """
 
     strategy: str = Field(
-        pattern="naive|normalized",
+        pattern="naive|normalized_by_folder|normalized_by_album",
         default="naive",
         description="Enter the strategy of choosing the next song from [naive|normalized].",
     )
@@ -128,13 +146,26 @@ class SamplingSettings(SettingsSection):
 
     from_: float = Field(
         ge=0,
+        le=30,
         default=2.0,
         description="Enter number of seconds from the start of the song from which the sampling is possible.",
     )
     to_finish: float = Field(
         ge=0,
-        default=3,
+        le=30,
+        default=3.0,
         description="Enter number of seconds till the finish of the song from which the sampling is possible.",
+    )
+    distance: float = Field(
+        ge=1,
+        default=5.0,
+        description="Enter minimal distance between two samples on the same track in seconds.",
+    )
+    clues_quantity: int = Field(
+        ge=1,
+        le=10,
+        default=3,
+        description="Enter the number of clue samples for each song.",
     )
     strategy: str = Field(
         pattern="naive|normalized",
@@ -194,27 +225,27 @@ class EvaluationSettings(SettingsSection):
     Settings of how the answers are evaluated.
     """
 
-    full_answer: int | float = Field(
+    full_answer: float = Field(
         ge=0,
         default=1.0,
         description="Enter the number of points for full answer.",
     )
-    half_answer: int | float = Field(
+    half_answer: float = Field(
         ge=0,
         default=0.5,
         description="Enter the number of points for half answer.",
     )
-    no_answer: int | float = Field(
+    no_answer: float = Field(
         ge=0,
         default=0.0,
         description="Enter the number of points for no answer.",
     )
-    wrong_answer: int | float = Field(
+    wrong_answer: float = Field(
         le=0.0,
         default=0.0,
         description="Enter the negative number of points for wrong answer.",
     )
-    clue_discont: float = Field(
+    clue_discount: float = Field(
         ge=0.0,
         le=1.0,
         default=0.1,
@@ -226,21 +257,19 @@ class ServicePathsSettings(SettingsSection):
     """
     Settings of where to store service files.
     """
-    config_path: Path = Field(
-        default=CONFIG_FILE_PATH,
+
+    config_path: str = Field(
+        default=str(CONFIG_FILE_PATH),
         description="Enter the path to the config file.",
     )
-    game_pickle_path: Path = Field(
-        default=Path("game.pickle"),
+    game_pickle_path: str = Field(
+        default=str(PICKLE_FILE_PATH),
         description="Enter the path to the game pickle file.",
     )
-    history_log_path: Path = Field(
-        default=Path("history.yaml"),
+    history_log_path: str = Field(
+        default=str(HISTORY_FILE_PATH),
         description="Enter the path to the history file.",
     )
-
-
-YamlDict: TypeAlias = dict[str, dict[str, Any] | list[dict[str, str]]]
 
 
 class Settings(BaseSettings):
@@ -257,47 +286,84 @@ class Settings(BaseSettings):
     sampling: SamplingSettings = Field(default=SamplingSettings())
     playback_bar: PlaybackBarSettings = Field(default=PlaybackBarSettings())
     evaluation: EvaluationSettings = Field(default=EvaluationSettings())
-    # paths: ServicePathsSettings = Field(default=ServicePathsSettings())
-
-    @staticmethod
-    def _dict_from_yaml_file() -> YamlDict:
-        with open(CONFIG_FILE_PATH, "r", encoding="utf-8") as file:
-            return yaml.safe_load(file)
+    service_paths: ServicePathsSettings = Field(default=ServicePathsSettings())
 
     @classmethod
     def load_from_file(cls) -> Self:
-        return cls(**cls._dict_from_yaml_file())
+        yaml_dict = cls.config_file_as_dict()
+
+        settings = cls(**yaml_dict)
+
+        players_number = yaml_dict.get("game", {}).get("players_number", None)
+        settings.players = [PlayerSettings(**p) for p in yaml_dict.get("players", [])]
+        if players_number and (diff := players_number - len(settings.players)) > 0:
+            settings.players.extend([PlayerSettings() for _ in range(diff)])
+        if players_number and (players_number - len(settings.players) < 0):
+            settings.players = settings.players[:players_number]
+
+        settings.save_to_file()
+
+        cls._instance = settings
+
+        return settings
 
     def update_from_file(self) -> None:
-        yaml_dict = self._dict_from_yaml_file()
+        yaml_dict = self.config_file_as_dict()
 
         fields = self.model_dump(exclude={"players"})
 
         for section_name in fields:
-            setattr(self, section_name, self.__annotations__[section_name](**yaml_dict[section_name]))
+            setattr(
+                self,
+                section_name,
+                self.__annotations__[section_name](**yaml_dict[section_name]),
+            )
 
-        self.players = [PlayerSettings(**player) for player in yaml_dict["players"]]
+        self.players = [PlayerSettings(**p) for p in yaml_dict.get("players", [])]
+        players_number = yaml_dict.get("game", {}).get("players_number", None)
+        if (diff := players_number - len(self.players)) > 0 and players_number:
+            self.players.extend([PlayerSettings() for _ in range(diff)])
+
+        self.save_to_file()
 
     def save_to_file(self) -> None:
         with open(CONFIG_FILE_PATH, "w", encoding="utf-8") as file:
-            yaml.dump(self.model_dump(), file, allow_unicode=True)
+            yaml.dump(self.model_dump(), file, allow_unicode=True, sort_keys=False)
 
     def set_to_default(self) -> None:
-        fields = self.model_dump(exclude={"players"})
-
-        for section_name in fields:
+        for section_name in self.model_dump(exclude={"players"}):
             setattr(self, section_name, self.__annotations__[section_name]())
 
-    @property
-    def config_file_as_str(self) -> str:
-        with open(CONFIG_FILE_PATH, 'r') as file:
+        self.game.players_number = len(self.players)
+
+        self.save_to_file()
+
+    @staticmethod
+    def config_file_as_dict() -> dict:
+        with open(CONFIG_FILE_PATH, "r") as file:
+            return yaml.safe_load(file) or {}
+
+    @staticmethod
+    def config_file_as_str() -> str:
+        with open(CONFIG_FILE_PATH, "r") as file:
             return file.read()
 
     def edit_config_file(self) -> None:
-        editor = os.environ.get('EDITOR', 'vi')
+        editor = os.environ.get("EDITOR", "nano")
+
         subprocess.call([editor, CONFIG_FILE_PATH])
-        self.update_from_file()
+
+        try:
+            self.update_from_file()
+        except ValidationError as e:
+            self.save_to_file()
+            raise e
+
+    def __str__(self):
+        import json
+
+        return json.dumps(self.model_dump(), indent=4, ensure_ascii=False)
 
 
 def get_settings() -> Settings:
-    return get_singleton_instance(Settings).load_from_file()
+    return get_singleton_instance(Settings)

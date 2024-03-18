@@ -1,37 +1,34 @@
 from functools import cache
 
+from app.cli.formatters import Text
 from app.readme.texts import README_TEXTS
-from app.utils import classproperty
 
 
-class ReadmeModel:
-    _texts = README_TEXTS
+class TextsModel:
+    def __init__(self, texts: dict[str, Text]) -> None:
+        self._texts = texts
 
-    @classmethod
-    @classproperty
-    def sections_number(cls) -> int:
-        return len(cls._texts)
+    @property
+    def sections_number(self) -> int:
+        return len(self._texts)
 
-    @classmethod
     @cache
-    def get_order_number_by_section_name(cls, section_name: str, /) -> int:
-        if section_name in cls._texts:
-            return list(cls._texts.keys()).index(section_name)
-
+    def get_order_number_by_section_name(self, text_title: str, /) -> int:
+        if text_title in self._texts:
+            return list(self._texts.keys()).index(text_title)
         raise ValueError("Invalid readme section name")
 
-    @classmethod
     @cache
-    def get_section_name_by_order_number(cls, order_number: int, /) -> str:
-        if 0 <= order_number < cls.sections_number:
-            return tuple(cls._texts.keys())[order_number]
-
+    def get_section_name_by_order_number(self, order_number: int, /) -> Text:
+        if 0 <= order_number < self.sections_number:
+            return tuple(self._texts.keys())[order_number]
         raise ValueError("Invalid order number")
 
-    @classmethod
     @cache
-    def get_text_by_order_number(cls, order_number: int, /) -> str:
-        if 0 <= order_number < cls.sections_number:
-            return tuple(cls._texts.values())[order_number]
-
+    def get_text_by_order_number(self, order_number: int, /) -> Text:
+        if 0 <= order_number < self.sections_number:
+            return tuple(self._texts.values())[order_number] + "\n"
         raise ValueError("Invalid order number")
+
+
+README_MODEL = TextsModel(README_TEXTS)

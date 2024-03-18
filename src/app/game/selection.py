@@ -1,12 +1,15 @@
 import random
 from abc import ABC, abstractmethod
-from pathlib import Path
-from typing import Any, Iterable, Protocol
+from functools import partial
+from typing import Any, Protocol, Sequence, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from app.game.models import Audiofile
 
 
 def get_indexes_of_maximums_in_list(list_object: list[Any]) -> list[int]:
     maximum = 0
-    max_index_list = [0,]
+    max_index_list = [0]
     for element_number in range(0, len(list_object)):
         if list_object[element_number] > maximum:
             maximum = list_object[element_number]
@@ -21,11 +24,14 @@ class SongSelectionStrategy(Protocol):
     Returns a list of random audiofile from given list of audiofiles.
     """
 
-    def __call__(self, audiofiles: list[Path], quantity: int) -> list[Path]:
-        ...
+    def __call__(
+        self,
+        audiofiles: Sequence["Audiofile"],
+        quantity: int,
+    ) -> list["Audiofile"]: ...
 
 
-class NaiveSongSelectionStrategy(SongSelectionStrategy):
+class NaiveSongSelectionStrategy:
     """
     Algorithm:
     Simple random selection of "quantity" audiofiles from given list.
@@ -33,46 +39,79 @@ class NaiveSongSelectionStrategy(SongSelectionStrategy):
 
     literal: str = "naive"
 
-    def __call__(self, audiofiles: list[Path], quantity: int) -> list[Path]:
+    def __call__(
+        self, audiofiles: Sequence["Audiofile"], quantity: int
+    ) -> list["Audiofile"]:
         return random.sample(audiofiles, quantity)
 
 
-class NormalizedSongSelectionStrategy(SongSelectionStrategy):
+def _select_by(
+    files_by_key: dict[str, set["Audiofile"]], quantity: int
+) -> list["Audiofile"]:
+    keys = list(files_by_key.keys())  # TODO: rename function
+    random.shuffle(keys)
+
+    key_counter = 1
+    selected_files: list["Audiofile"] = []
+    while len(selected_files) < quantity:
+        if key_counter >= len(keys):
+            key_counter = 1
+
+        selected_key = keys[key_counter]
+
+        while not files_by_key[selected_key]:
+            key_counter += 1
+
+        selected_file = random.sample(files_by_key[selected_key], 1)[0]
+        selected_files.append(selected_file)
+
+        selected_key += 1
+
+    return selected_files
+
+
+class NormalizedByFolderSongSelectionStrategy:
     """
     Algorithm:
-    Normalize the list of audiofiles by its folder structure
+    Normalize the list of audiofiles by folder structure,
+    so selected audiofiles are homogeneously distributed across the folders.
     """
 
-    literal: str = "normalized"
+    literal: str = "normalized_by_folder"
 
-    def __call__(self, audiofiles: Iterable[Path], quantity: int) -> list[Path]:
-        files_by_folders: dict[Path, set[Path]] = dict()
-        for file in audiofiles:
-            if file.parent not in files_by_folders:
-                files_by_folders[file.parent] = set()
-            files_by_folders[file.parent].add(file)
+    def __call__(
+        self, audiofiles: Sequence["Audiofile"], quantity: int
+    ) -> list["Audiofile"]:
+        files_by_folders: dict[str, set["Audiofile"]] = dict()
+        for audiofile in audiofiles:
+            parent_path = str(audiofile.path.parent)
+            if audiofile.path.parent not in files_by_folders:
+                files_by_folders[parent_path] = set()
+            files_by_folders[parent_path].add(audiofile)
 
-        folders = list(files_by_folders.keys())
-        random.shuffle(folders)
+        return _select_by(files_by_key=files_by_folders, quantity=quantity)
 
-        folder_counter = 1
-        selected_files = []
-        while len(selected_files) < quantity:
 
-            if folder_counter >= len(folders):
-                folder_counter = 1
+class NormalizedByAlbumSongSelectionStrategy:
+    """
+    Algorithm:
+    Normalize the list of audiofiles by theirs metadata,
+    so selected audiofiles are homogeneously distributed across the albums.
+    """
 
-            selected_folder = folders[folder_counter]
+    literal: str = "normalized_by_album"
 
-            while not files_by_folders[selected_folder]:
-                folder_counter += 1
+    def __call__(
+        self, audiofiles: Sequence["Audiofile"], quantity: int
+    ) -> list["Audiofile"]:
+        files_by_albums: dict[str, set["Audiofile"]] = dict()
+        for audiofile in audiofiles:
+            album = audiofile.metadata.album
+            if album not in files_by_albums:
+                files_by_albums[album] = set()
+            files_by_albums[album].add(audiofile)
 
-            selected_file = random.sample(files_by_folders[selected_folder], 1)[0]
-            selected_files.append(selected_file)
-
-            folder_counter += 1
-
-        return selected_files
+        return _select_by(files_by_key=files_by_albums, quantity=quantity)
 
 
 class RandomTimesStrategy(ABC):
@@ -85,35 +124,69 @@ class RandomTimesStrategy(ABC):
 
     Usage: ConcreteRandomTimesStrategy(length, distance, times, from_, to)()
     """
+
     length: int
     distance: int
-    times: int
-    from_: int = 0
-    left_to_finish: int = 0
+    quantity: int
+    start: int = 0
+    end_cut: int = 0
 
     literal: str | None = None
 
-    def __init__(self, *, length: int, distance: int, times: int, from_: int = 0, to: int = 0):
-        self.length = length
-        self.distance = distance
-        self.times = times
-        self.from_ = from_
+    def __init__(
+        self,
+        *,
+        length: int,
+        distance: int,
+        quantity: int,
+        start: int = 0,
+        end_cut: int = 0,
+    ):
+        self.length = length  # full length of the track
+        self.distance = distance  # minimal distance between samples
+        self.quantity = quantity  # number of samples to select
+        self.start = start  # start of the segment
+        self.end_cut = end_cut  # number of ms to cut from the end
+        self.end = self.length - self.end_cut  # end point of the segment
 
-        self.left_to_finish = to - from_ - length
-        if self.left_to_finish > self.length:
-            raise ValueError("Left to finish cannot be greater than length.")
+        try:
+            if end_cut + start > length:
+                raise ValueError(
+                    {
+                        "flag": "LEN",
+                        "msg": "Start and end_cut values too big for the track.",
+                    }
+                )
+            if (length - start - end_cut) < distance * quantity:
+                raise ValueError(
+                    {
+                        "flag": "DIS",
+                        "msg": "Cannot fit samples of given length and distance.",
+                    }
+                )
 
-        self.to = self.length - self.left_to_finish
-        if (self.to - self.from_) < self.distance * self.times:
-            raise ValueError(
-                f"Cannot fit {self.times} samples "
-                f"of length {self.distance} "
-                f"between {self.from_} and {self.to}."
-            )
+        except ValueError as e:
+            if (flag := e.args[0].get("flag")) == "DIS":
+                self.__call__ = partial(
+                    self.fallback_algorithm,
+                    quantity=self.quantity,
+                )
+            elif flag == "LEN":
+                self.__call__ = partial(
+                    self.fallback_algorithm_for_full_length,
+                    quantity=self.quantity,
+                )
+            else:
+                raise e
+
+    def fallback_algorithm(self, quantity: int) -> list[int]:
+        return [random.randrange(self.start, self.end) for _ in range(quantity)]
+
+    def fallback_algorithm_for_full_length(self, quantity: int) -> list[int]:
+        return [random.randrange(self.length) for _ in range(quantity)]
 
     @abstractmethod
-    def __call__(self) -> list[int]:
-        ...
+    def __call__(self) -> list[int]: ...
 
 
 class NaiveRandomTimesStrategy(RandomTimesStrategy):
@@ -130,9 +203,9 @@ class NaiveRandomTimesStrategy(RandomTimesStrategy):
 
     def __call__(self) -> list[int]:
         timestamps = []
-        for _ in range(self.times):
-            while True:
-                sample_start_time = random.randrange(self.from_, self.to)
+        for _ in range(self.quantity):
+            for i in range(25):
+                sample_start_time = random.randrange(self.start, self.end)
 
                 is_remote_enough = True
                 for timestamp in timestamps:  # check distance to other timestamps
@@ -144,6 +217,9 @@ class NaiveRandomTimesStrategy(RandomTimesStrategy):
                 if is_remote_enough:
                     timestamps.append(sample_start_time)
                     break
+
+        if (diff := self.quantity - len(timestamps)) > 0:
+            timestamps.append(self.fallback_algorithm(diff))
 
         return timestamps
 
@@ -158,13 +234,26 @@ class NormalizedRandomTimesStrategy(RandomTimesStrategy):
     literal = "normalized"
 
     def __call__(self) -> list[int]:
-        step = (self.to - self.from_) // self.times
-        segment_start, segment_end = self.from_, self.from_ + step
+        step = (self.end - self.start) // self.quantity
+        segment_start, segment_end = self.start, self.start + step
 
         timestamps = []
-        while segment_end < self.to - self.length:
-            timestamp = random.randrange(segment_start, segment_end - self.length)
+        while segment_end < self.end:
+            timestamp = random.randrange(segment_start, segment_end)
             timestamps.append(timestamp)
             segment_start, segment_end = segment_end, segment_end + step
 
         return timestamps
+
+
+SONGS_STRATEGIES_MAPPING: dict[str, type[SongSelectionStrategy]] = {  # noqa
+    "naive": NaiveSongSelectionStrategy,
+    "normalized_by_folder": NormalizedByFolderSongSelectionStrategy,
+    "normalized_by_album": NormalizedByAlbumSongSelectionStrategy,
+}
+
+
+SAMPLES_STRATEGIES_MAPPING: dict[str, type[RandomTimesStrategy]] = {
+    "naive": NaiveRandomTimesStrategy,
+    "normalized": NormalizedRandomTimesStrategy,
+}

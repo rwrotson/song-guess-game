@@ -1,31 +1,58 @@
-from app.main.state import State, Stage
+from app.cli.factories import ParsedModel
+from app.cli.models import Menu
+from app.cli.mods import manglers, representers, validators
+from app.state import Stage, get_state
 from app.settings.models import SettingsSection
+from app.settings.processors import SettingsSectionProcessor
 
 
-stage_to_settings_section_mapping = {
-    Stage.MAIN_SETTINGS.GAME_SETTINGS: models.GameSettings,
-    Stage.MAIN_SETTINGS.PLAYER_SETTINGS: models.PlayerSettings,
-    Stage.ADVANCED_SETTINGS.DISPLAY: models.DisplaySettings,
-    Stage.ADVANCED_SETTINGS.SELECTION: models.SelectionSettings,
-    Stage.ADVANCED_SETTINGS.SAMPLING: models.SamplingSettings,
-    Stage.ADVANCED_SETTINGS.PLAYBACK_BAR: models.PlaybackBarSettings,
-    Stage.ADVANCED_SETTINGS.EVALUATION: models.EvaluationSettings,
-}
-
-
-def settings_factory(state: State) -> SettingsSection:
-    stage = state.stage
+def _settings_sections_mapping(stage: Stage) -> SettingsSection:
+    state = get_state()
     settings = state.settings
 
-    stage_to_settings_section_mapping = {
-        Stage.MAIN_SETTINGS.GAME_SETTINGS: settings.game,
-        Stage.MAIN_SETTINGS.PLAYER_SETTINGS: settings.players,
-        Stage.ADVANCED_SETTINGS.DISPLAY: settings.display,
-        Stage.ADVANCED_SETTINGS.SELECTION: settings.selection,
-        Stage.ADVANCED_SETTINGS.SAMPLING: settings.sampling,
-        Stage.ADVANCED_SETTINGS.PLAYBACK_BAR: settings.playback_bar,
-        Stage.ADVANCED_SETTINGS.EVALUATION: settings.evaluation,
+    if stage == Stage.MAIN_SETTINGS.value.PLAYER:
+        if (player_number := state.data.get("player_number")) is None:
+            raise ValueError("")
+
+        return settings.players[player_number - 1]
+
+    others_mapping = {
+        Stage.MAIN_SETTINGS.value.GAME: settings.game,
+        Stage.ADVANCED_SETTINGS.value.DISPLAY: settings.display,
+        Stage.ADVANCED_SETTINGS.value.SELECTION: settings.selection,
+        Stage.ADVANCED_SETTINGS.value.SAMPLING: settings.sampling,
+        Stage.ADVANCED_SETTINGS.value.PLAYBACK_BAR: settings.playback_bar,
+        Stage.ADVANCED_SETTINGS.value.EVALUATION: settings.evaluation,
+        Stage.ADVANCED_SETTINGS.value.SERVICE_PATHS: settings.service_paths,
     }
 
-    return stage_to_settings_section_mapping[stage]
+    return others_mapping[stage]
 
+
+def settings_menu_factory(stage: Stage) -> Menu | None:
+    settings_section = _settings_sections_mapping(stage)
+
+    if not (settings_model := ParsedModel.from_any_origin(settings_section)):
+        return None
+
+    return Menu(
+        *settings_model.steps,
+        name=settings_model.name,
+        representer=representers.Representer(
+            representers.RepresenterTemplate(
+                prompt_template=representers.PromptTemplate.PROMPT_WITH_NAME,
+                default_template=representers.DefaultTemplate.DEFAULT,
+                options_template=representers.OptionsTemplate.WITH_NUMBER_AND_TAB,
+            )
+        ),
+        validator=validators.ModelValidator(
+            model=settings_section,
+            accept_null_for_defaults=True,
+        ),
+        mangler=manglers.Mangler(
+            manglers.ManglingTemplate.SETTINGS_SECTION,
+        ),
+        processor=SettingsSectionProcessor(
+            settings_section=settings_section,
+        ),
+    )
