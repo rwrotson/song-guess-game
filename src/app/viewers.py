@@ -13,7 +13,7 @@ class Viewer(Protocol):
         ...
 
 
-def _format_text(text: str, /, is_bold: bool = False, is_sep_line: bool = True) -> str:
+def _format_text(text: str, /, *, is_bold: bool = False, is_sep_line: bool = True) -> str:
     if is_bold:
         text = bold(text)
     if is_sep_line:
@@ -53,7 +53,7 @@ class TypingEnabledViewer:
         )
 
 
-def viewer_factory(display_settings: DisplaySettings, *, color: ForeColor.WHITE) -> AbstractViewer:
+def _viewer_factory(display_settings: DisplaySettings, *, color: ForeColor.WHITE) -> Viewer:
     is_typing_enabled = display_settings.typing_enabled
 
     typing_mapping = {
@@ -98,8 +98,8 @@ class ViewersContainer:
             self._colors = [ForeColor.WHITE for _ in range(players_number)]
 
     def update_viewers(self, display_settings: DisplaySettings) -> None:
-        self._default_viewer = viewer_factory(display_settings, color=ForeColor.WHITE)
-        self._players_viewers = [viewer_factory(display_settings, color=c) for c in self._colors]
+        self._default_viewer = _viewer_factory(display_settings, color=ForeColor.WHITE)
+        self._players_viewers = [_viewer_factory(display_settings, color=c) for c in self._colors]
 
     @property
     def default_viewer(self) -> Viewer:
@@ -109,8 +109,8 @@ class ViewersContainer:
     def colors(self) -> list[ForeColor]:
         return self._colors
 
-    def players_viewer(self, player_number: int, /) -> Viewer:
+    def player_viewer(self, player_number: int, /) -> Viewer:
         return self._players_viewers[player_number]
 
-    def players_color(self, player_number: int, /) -> ForeColor:
+    def player_color(self, player_number: int, /) -> ForeColor:
         return self._colors[player_number]

@@ -28,11 +28,11 @@ class MenuStep:
         return len(self.options) if self.options else 0
 
     @classmethod
-    def from_menu_info(cls, menu_info: type[MenuTemplate]) -> Self:
+    def from_menu_template(cls, menu_template: type[MenuTemplate]) -> Self:
         return cls(
-            name=menu_info.name,
-            prompt=menu_info.prompt,
-            options=menu_info if len(menu_info) else None,
+            name=menu_template.name,
+            prompt=menu_template.prompt,
+            options=menu_template if len(menu_template) else None,
         )
 
     @classmethod

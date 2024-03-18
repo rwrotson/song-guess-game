@@ -1,7 +1,6 @@
-import time
 from enum import auto
-from random import randrange
-from typing import override
+from typing import override, Self
+from string import Template
 
 from colorama import init, Fore, Style
 
@@ -15,7 +14,7 @@ _STYLE_FORMATTERS = {
     "bold": Style.BRIGHT,
     "dim": Style.DIM,
     "normal": Style.NORMAL,
-    "reset_style": Style.RESET_ALL,
+    "r_style": Style.RESET_ALL,
 }
 
 _COLOR_FORMATTERS = {
@@ -26,16 +25,53 @@ _COLOR_FORMATTERS = {
     "magenta": Fore.MAGENTA,
     "cyan": Fore.CYAN,
     "white": Fore.WHITE,
-    "reset_color": Fore.RESET,
+    "true_white": "",
+    "r_color": Fore.RESET,
 }
+
 
 FORMATTERS = {**_STYLE_FORMATTERS, **_COLOR_FORMATTERS}
 
 
-class TemplateString(str):
+class TemplateStringOld(str):
     @override
     def format(self, *args, **kwargs) -> str:
+        for k, v in kwargs.items():
+            if v is None:
+                kwargs[k] = ""
         return super().format(*args, **FORMATTERS, **kwargs)
+
+
+class TemplateString(Template):
+    @staticmethod
+    def _patch_custom_formatters(kwargs: dict) -> dict:
+        for k, v in kwargs.items():
+            if v is None:
+                kwargs[k] = ""
+        kwargs.update(FORMATTERS)
+        return kwargs
+
+    @override
+    def substitute(self, /, **kwargs) -> Self:
+        kwargs = self._patch_custom_formatters(kwargs)
+        return super().substitute(kwargs)
+
+    @override
+    def safe_substitute(self, /, **kwargs) -> Self:
+        kwargs = self._patch_custom_formatters(kwargs)
+        return super().safe_substitute(kwargs)
+
+    def __add__(self, other: str | Self):
+        self.template += str(other)
+        return self
+
+    def __radd__(self, other: str | Self):
+        self.template = str(other) + self.template
+        return self
+
+    def __iadd__(self, other: str | Self):
+        self.template += str(other)
+        return self
 
 
 def bold(text: str, /) -> str:
@@ -43,7 +79,8 @@ def bold(text: str, /) -> str:
 
 
 def separate_line(text: str, /) -> str:
-    return text + "\n"
+    text += "\n"
+    return text
 
 
 class ForeColor(EnumeratedStrEnum):
@@ -82,28 +119,6 @@ def _get_color_generator() -> _ColorGenerator:
     return get_singleton_instance(_ColorGenerator)
 
 
-class ColorFormatter:
-    @staticmethod
-    def colored_fore(text: str, /, *, color: ForeColor) -> str:
-        if color == ForeColor.WHITE:
-            return text
-
-        return _COLOR_FORMATTERS[color] + text + _COLOR_FORMATTERS["reset_color"]
-
-    @classmethod
-    def red(self, text: str, /) -> str:
-        return self.colored_fore(text, color=ForeColor.RED)
-
-    def green(self, text: str, /) -> str:
-        return self.colored_fore(text, color=ForeColor.GREEN)
-
-    def blue(self, text: str, /) -> str:
-        return self.colored_fore(text, color=ForeColor.BLUE)
-
-    def magenta(self, text: str, /) -> str:
-        return self.colored_fore(text, color=ForeColor.MAGENTA)
-
-
 def colored_fore(text: str, /, *, color: ForeColor) -> str:
     if color == ForeColor.WHITE:
         return text
@@ -134,14 +149,3 @@ def blue(text: str, /) -> str:
 
 def magenta(text: str, /) -> str:
     return colored_fore(text, color=ForeColor.MAGENTA)
-
-
-def imitate_typing(text: str, /, *, min_delay: int | float, max_delay: int | float) -> None:
-    if isinstance(min_delay, float):
-        min_delay = int(min_delay * 1000)
-    if isinstance(max_delay, float):
-        max_delay = int(max_delay * 1000)
-    for char in text:
-        print(char, end="", flush=True)
-        delay = randrange(min_delay, max_delay) / 1000
-        time.sleep(delay)
