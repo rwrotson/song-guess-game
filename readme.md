@@ -60,16 +60,24 @@ Your imputs will be validated and saved.
 
 You can check that library was correctly parsed in `libraries_stats` menu:
 
-![Screenshot of a short library stats representation.](/readme/libraries-stats-short.png)
-![Screenshot of an extended library stats representation.](/readme/libraries-stats-ext.png)
+![Screenshot of a short library stats representation.](/readme/library-stats-short.png)
+![Screenshot of an extended library stats representation.](/readme/library-stats-ext.png)
 
-We recommend to start your first game with ```sample duration = 1.0```, then adjust it too your taste.
+Then you can start game by pressing `play` in the main menu. If you run into complications, check `readme` menu inside app.
 
 # Game
 
+The game consists of two steps: question and answer screens. 
+
+At the question screen you can listen to the question sample a few times, get additional clue samples, and eventually try to give answer and go to the next screen:
+
 ![Screenshot of a question screen.](/readme/question-screen.png)
 
+After you give your suggestions about the song, you are taken to the answer screen. Here you can listen to the full song and give fair evaluation of the answer.
+
 ![Screenshot of an answer screen.](/readme/answer-screen.png)
+
+Then the turn goes to the next player, and these two steps are being repeated.
 
 # Rules
 
@@ -100,8 +108,8 @@ You can explore customization options in the reference right below.
 - **repeats_number** : number of allowed repeats in one round (*>=1*, default: **5**)
 - **clues_number** : number of clue samples (*>=0*, default: **10**)
 - **clues_strategy** : method of how next clue sample for the same song will be chosen (default: **new_next**))
-  - *random_next*
-  - *new_next*
+  - *random_next* : every new clue is randomely selected from all clue samples for the song
+  - *new_next* : new clue is next clue in all clue samples queue
 - **rounds_number** : number of songs each player tries to guess, number of rounds of the game *(can't be less than the number of songs in the smallest player's library)* (*>=1*, default: **10**)
 
 ### PLAYERS_SETTINGS:
@@ -116,9 +124,9 @@ You can explore customization options in the reference right below.
 
 ### SELECTION_SETTINGS:
 - **strategy** : how the songs are being chosen from player library (default: **naive**)
-  - *naive*: select songs randomely from all audiofiles
-  - *normalized_by_folder*: select songs evenly from each folder inside players library 
-  - *normalized_by_album*: select songs evenly from each album inside players library
+  - *naive* : select songs randomely from all audiofiles
+  - *normalized_by_folder* : select songs evenly from each folder inside players library 
+  - *normalized_by_album* : select songs evenly from each album inside players library
 
 ### SAMPLING_SETTINGS:
 - **from_** : from what second of the song the sample will be taken (*>=0.0*, default: **0.0**)
@@ -126,8 +134,8 @@ You can explore customization options in the reference right below.
 - **distance** : minimal distance between two samples from the same song in seconds (*>=1.0*, default: **5.0**)
 - **clues_quantity** : number of clue samples for the song (*>=1, <=10*, default: **3**)
 - **strategy** : method of how next clue sample for the same song will be chosen 
-  - *naive*: select next clue randomely from all clue samples
-  - *normalized*: select next clue from all clue samples sequentially (default: normalized)
+  - *naive* : select next clue randomely from all clue samples
+  - *normalized* : select next clue from all clue samples sequentially (default: normalized)
 
 ### PLAYBACK_BAR_SETTINGS:
 - **empty_char** : character that represents empty space in playback bar (default: **░**)
