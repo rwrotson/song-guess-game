@@ -1,14 +1,16 @@
 # songs-roulette
 
-*A terminal game to play with friends, lovers and music geeks! Who knows own music library better?
-Do you really can tell the difference between "Hey Jude" and "Strawberry Fields Forever" by 1-sec sample? 
-Between "And I Love Her" and "PS I Love You"?
-Then how about 0.5 seconds? 
-Need a clue?..
-Roll the roulette!*
+*A terminal game to play with friends, lovers and music geeks! Who knows own music library better?*
+*Do you really can tell the difference between "Hey Jude" and "Strawberry Fields Forever" by 1-sec sample?*
+*Between "And I Love Her" and "PS I Love You"?*
+*Then how about 0.5 seconds?*
+*Need a clue?..*
+*Roll the roulette!*
 
-Try to guess random songs from your music library. You can repeat question sample or listen .
-Broadly configurable game params: random algorithms, rules, mechanics and appearance in the terminal. 
+Try to guess random songs from your music library. You can repeat question sample or listen to additional samples from the same song as clues.
+Broadly configurable game params: try different algorithms for selection, bend rules and mechanics, change the appearance of the game in the terminal. 
+
+# Requirements
 
 All you need to start game is a directory with music files inside for every player.
 Game supports `mp3-`, `flac-` and `wav-`files as sources of audio.
@@ -56,9 +58,18 @@ Before launching the game, configure it via built-in questionnaire: specify game
 
 Your imputs will be validated and saved. 
 
-You can check 
+You can check that library was correctly parsed in `libraries_stats` menu:
+
+![Screenshot of a short library stats representation.](/readme/libraries-stats-short.png)
+![Screenshot of an extended library stats representation.](/readme/libraries-stats-ext.png)
 
 We recommend to start your first game with ```sample duration = 1.0```, then adjust it too your taste.
+
+# Game
+
+![Screenshot of a question screen.](/readme/question-screen.png)
+
+![Screenshot of an answer screen.](/readme/answer-screen.png)
 
 # Rules
 
@@ -88,7 +99,9 @@ You can explore customization options in the reference right below.
 - **infinite_repeats** : if True, player can repeat the sample infinite times (default: **False**)
 - **repeats_number** : number of allowed repeats in one round (*>=1*, default: **5**)
 - **clues_number** : number of clue samples (*>=0*, default: **10**)
-- **clues_strategy** : method of how next clue sample for the same song will be chosen (*random_next|new_next*, default: **new_next**)
+- **clues_strategy** : method of how next clue sample for the same song will be chosen (default: **new_next**))
+  - *random_next*
+  - *new_next*
 - **rounds_number** : number of songs each player tries to guess, number of rounds of the game *(can't be less than the number of songs in the smallest player's library)* (*>=1*, default: **10**)
 
 ### PLAYERS_SETTINGS:
